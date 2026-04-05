@@ -70,8 +70,6 @@ export async function analyzeWithGemini(
   const text: string =
     data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
 
-  console.log("Gemini raw response:", text); // デバッグ用
-
   // JSON部分を抽出（複数パターン対応）
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {

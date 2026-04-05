@@ -1,16 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Song } from "./types";
 import { analyzeWithGemini } from "./lib/geminiAnalyzer";
 import { buildSong } from "./lib/scoreParser";
 import ScoreView from "./components/ScoreView";
+import BookmarkletGuide from "./components/BookmarkletGuide";
 
-type AppState = "input" | "loading" | "result" | "error";
+type AppState = "input" | "loading" | "result" | "error" | "guide";
 
 export default function App() {
   const [state, setState] = useState<AppState>("input");
   const [rawText, setRawText] = useState("");
   const [song, setSong] = useState<Song | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // URLパラメータから譜面テキストを受け取る
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const score = params.get("score");
+    if (score) {
+      setRawText(decodeURIComponent(score));
+      window.history.replaceState({}, "", "/");
+    }
+  }, []);
 
   async function handleAnalyze() {
     if (!rawText.trim()) return;
@@ -28,6 +39,10 @@ export default function App() {
 
   if (state === "result" && song) {
     return <ScoreView song={song} onBack={() => setState("input")} />;
+  }
+
+  if (state === "guide") {
+    return <BookmarkletGuide onBack={() => setState("input")} />;
   }
 
   return (
@@ -59,6 +74,12 @@ export default function App() {
           Geminiが譜面を解析しています...
         </p>
       )}
+      <button
+        onClick={() => setState("guide")}
+        className="mt-6 text-gray-500 text-xs underline"
+      >
+        📖 スマホでの使い方（ブックマークレット）
+      </button>
     </div>
   );
 }
