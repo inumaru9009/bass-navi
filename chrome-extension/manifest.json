@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Bass Navi Helper",
+  "version": "1.0",
+  "description": "U-FRETの譜面をBass Naviに送る",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["https://ufret.jp/*", "https://u-fret.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Bass Navi Helper"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://ufret.jp/*", "https://u-fret.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}

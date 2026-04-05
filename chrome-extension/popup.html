@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        width: 300px;
+        padding: 16px;
+        background: #111;
+        color: #fff;
+        font-family: sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        color: #f59e0b;
+        margin-bottom: 8px;
+      }
+      p {
+        font-size: 12px;
+        color: #9ca3af;
+        margin-bottom: 12px;
+      }
+      button {
+        width: 100%;
+        padding: 10px;
+        background: #f59e0b;
+        color: #000;
+        font-weight: bold;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:disabled {
+        opacity: 0.5;
+      }
+      #status {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #6ee7b7;
+        min-height: 18px;
+      }
+      #error {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #fca5a5;
+        min-height: 18px;
+      }
+      textarea {
+        width: 100%;
+        height: 120px;
+        background: #1f2937;
+        color: #fff;
+        border: 1px solid #374151;
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 11px;
+        resize: none;
+        margin-top: 10px;
+        box-sizing: border-box;
+      }
+      .copy-btn {
+        margin-top: 8px;
+        background: #374151;
+        color: #fff;
+        font-weight: normal;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎸 Bass Navi Helper</h1>
+    <p>U-FRETのページで押すと譜面テキストを取得します</p>
+    <button id="extractBtn">譜面を取得する</button>
+    <div id="status"></div>
+    <div id="error"></div>
+    <textarea id="output" placeholder="取得した譜面がここに表示されます" style="display:none"></textarea>
+    <button class="copy-btn" id="copyBtn" style="display:none">クリップボードにコピー</button>
+    <script src="popup.js"></script>
+  </body>
+</html>
