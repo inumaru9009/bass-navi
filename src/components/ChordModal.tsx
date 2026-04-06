@@ -1,6 +1,21 @@
 // src/components/ChordModal.tsx
 
-import type { ChordDetail, BassPosition } from "../types";
+import type { ChordDetail, BassPosition, NoteRole } from "../types";
+
+const INTERVAL_SHORT: Record<string, string> = {
+  "ルート":  "R",
+  "3rd":     "3",
+  "♭3rd":   "♭3",
+  "5th":     "5",
+  "♭5th":   "♭5",
+  "7th":     "7",
+  "maj7th":  "M7",
+  "♭7th":   "♭7",
+  "9th":     "9",
+  "4th":     "4",
+  "6th":     "6",
+  "2nd":     "2",
+};
 
 type Props = {
   detail: ChordDetail;
@@ -15,8 +30,13 @@ const STRING_NAMES: Record<number, string> = {
   4: "E",
 };
 
-function PositionDiagram({ positions }: { positions: BassPosition[] }) {
-  // 4フレット分のグリッド表示
+function PositionDiagram({
+  positions,
+  noteRoles,
+}: {
+  positions: BassPosition[];
+  noteRoles: NoteRole[];
+}) {
   const frets = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
   const usedFrets = positions.map(p => p.fret);
   const minFret = Math.max(0, Math.min(...usedFrets) - 1);
@@ -38,17 +58,23 @@ function PositionDiagram({ positions }: { positions: BassPosition[] }) {
             {STRING_NAMES[str]}
           </span>
           {displayFrets.map(f => {
-            const hit = positions.find(
+            const hitIndex = positions.findIndex(
               p => p.string === str && p.fret === f
             );
+            const hit = hitIndex !== -1;
+            const role = noteRoles[hitIndex];
+            const isRoot = role?.intervalName === "ルート";
+            const label = role ? (INTERVAL_SHORT[role.intervalName] ?? "●") : "●";
             return (
               <div
                 key={f}
                 className="w-8 h-6 border-b border-gray-600 flex items-center justify-center"
               >
                 {hit ? (
-                  <div className="w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center text-black text-xs font-bold">
-                    {f === 0 ? "○" : "●"}
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-black text-xs font-bold ${
+                    isRoot ? "bg-yellow-400" : "bg-green-400"
+                  }`}>
+                    {label}
                   </div>
                 ) : null}
               </div>
@@ -122,7 +148,7 @@ export default function ChordModal({ detail, onClose }: Props) {
         {/* ポジション図 */}
         <div className="mb-3">
           <p className="text-gray-400 text-xs mb-1">ポジション</p>
-          <PositionDiagram positions={detail.positions} />
+          <PositionDiagram positions={detail.positions} noteRoles={detail.noteRoles} />
         </div>
 
         {/* 一言アドバイス */}

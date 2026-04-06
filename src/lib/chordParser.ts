@@ -40,12 +40,14 @@ export function parseChord(chordStr: string): ChordToken {
   return { name: chordStr, root, bass, quality, position: 0 };
 }
 
+// コード判定パターン（複合修飾子に対応）
+const chordPattern = /^[A-G][b#]?(m|maj|min|aug|dim|sus|add)?[0-9]*(b5|#5|#9|b9|b13|#11)?(\/[A-G][b#]?)?$/;
+
 // コード行かどうか判定
 export function isChordLine(line: string): boolean {
   const cleaned = normalizeChordStr(line.trim());
   if (!cleaned) return false;
   const tokens = cleaned.split(/\s+/);
-  const chordPattern = /^[A-G][b#]?(m|maj|min|aug|dim|sus|add)?[0-9]*(\/[A-G][b#]?)?$/;
   const chordCount = tokens.filter(t => chordPattern.test(t)).length;
   return chordCount > 0 && chordCount / tokens.length >= 0.5;
 }
@@ -54,7 +56,6 @@ export function isChordLine(line: string): boolean {
 export function extractChords(line: string): ChordToken[] {
   const normalized = normalizeChordStr(line);
   const tokens = normalized.split(/\s+/).filter(Boolean);
-  const chordPattern = /^[A-G][b#]?(m|maj|min|aug|dim|sus|add)?[0-9]*(\/[A-G][b#]?)?$/;
   return tokens
     .filter(t => chordPattern.test(t))
     .map((t, i) => ({ ...parseChord(t), position: i }));
@@ -78,21 +79,34 @@ const BASS_POSITIONS: Record<string, BassPosition[]> = {
 
 // 構成音の定義
 const CHORD_TONES: Record<string, number[]> = {
-  "":     [0, 4, 7],
-  "m":    [0, 3, 7],
-  "7":    [0, 4, 7, 10],
-  "m7":   [0, 3, 7, 10],
-  "maj7": [0, 4, 7, 11],
-  "m7b5": [0, 3, 6, 10],
-  "dim":  [0, 3, 6],
-  "aug":  [0, 4, 8],
-  "sus2": [0, 2, 7],
-  "sus4": [0, 5, 7],
-  "add9": [0, 4, 7, 14],
-  "6":    [0, 4, 7, 9],
-  "m6":   [0, 3, 7, 9],
-  "9":    [0, 4, 7, 10, 14],
-  "m9":   [0, 3, 7, 10, 14],
+  "":      [0, 4, 7],
+  "m":     [0, 3, 7],
+  "7":     [0, 4, 7, 10],
+  "m7":    [0, 3, 7, 10],
+  "maj7":  [0, 4, 7, 11],
+  "m7b5":  [0, 3, 6, 10],
+  "dim":   [0, 3, 6],
+  "aug":   [0, 4, 8],
+  "sus2":  [0, 2, 7],
+  "sus4":  [0, 5, 7],
+  "add9":  [0, 4, 7, 14],
+  "6":     [0, 4, 7, 9],
+  "m6":    [0, 3, 7, 9],
+  "9":     [0, 4, 7, 10, 14],
+  "m9":    [0, 3, 7, 10, 14],
+  "dim7":  [0, 3, 6, 9],
+  "maj9":  [0, 4, 7, 11, 14],
+  "7sus4": [0, 5, 7, 10],
+  "sus":   [0, 5, 7],
+  "13":    [0, 4, 7, 10, 14, 21],
+  "maj13": [0, 4, 7, 11, 14, 21],
+  "m11":   [0, 3, 7, 10, 14, 17],
+  "11":    [0, 4, 7, 10, 14, 17],
+  "add2":  [0, 2, 4, 7],
+  "madd9": [0, 3, 7, 14],
+  "5":     [0, 7],
+  "aug7":  [0, 4, 8, 10],
+  "m13":   [0, 3, 7, 10, 14, 21],
 };
 
 const INTERVAL_ROLES: Record<number, { name: string; role: string }> = {

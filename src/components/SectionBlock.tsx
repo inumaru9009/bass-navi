@@ -2,7 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import type { Section, ChordToken } from "../types";
-import { getDegreeLabel } from "../lib/degreeAnalyzer";
+import { getDegreeLabel, getDegreeFunction } from "../lib/degreeAnalyzer";
+
+const degreeFunctionColors: Record<string, string> = {
+  tonic:       "bg-yellow-600 text-black hover:bg-yellow-400",
+  dominant:    "bg-red-700 text-white hover:bg-red-500",
+  subdominant: "bg-blue-700 text-white hover:bg-blue-500",
+  other:       "bg-gray-700 text-white hover:bg-gray-500",
+  "":          "bg-gray-800 text-yellow-400 hover:bg-yellow-500 hover:text-black",
+};
 
 type Props = {
   section: Section;
@@ -72,11 +80,13 @@ export default function SectionBlock({
             <div className="flex flex-wrap gap-2 mb-0.5">
               {line.chords.map((chord, ci) => {
                 const degree = getDegreeLabel(chord.name, degreeMap);
+                const degreeFunc = getDegreeFunction(degree);
+                const colorClass = degreeFunctionColors[degreeFunc];
                 return (
                   <div key={ci} className="flex flex-col items-center">
                     <button
                       onClick={() => onChordTap(chord)}
-                      className="text-yellow-400 text-sm font-mono font-bold bg-gray-800 px-2 py-0.5 rounded hover:bg-yellow-500 hover:text-black transition-colors"
+                      className={`text-sm font-mono font-bold px-2 py-0.5 rounded transition-colors ${colorClass}`}
                     >
                       {chord.name}
                     </button>
