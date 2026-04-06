@@ -2,12 +2,14 @@
 
 import { useEffect, useRef } from "react";
 import type { Section, ChordToken } from "../types";
+import { getDegreeLabel } from "../lib/degreeAnalyzer";
 
 type Props = {
   section: Section;
   isActive: boolean;
   onChordTap: (chord: ChordToken) => void;
   onVisible: () => void;
+  degreeMap: Record<string, string>;
 };
 
 export default function SectionBlock({
@@ -15,6 +17,7 @@ export default function SectionBlock({
   isActive,
   onChordTap,
   onVisible,
+  degreeMap,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -67,15 +70,24 @@ export default function SectionBlock({
           {/* コード行 */}
           {line.chords.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-0.5">
-              {line.chords.map((chord, ci) => (
-                <button
-                  key={ci}
-                  onClick={() => onChordTap(chord)}
-                  className="text-yellow-400 text-sm font-mono font-bold bg-gray-800 px-2 py-0.5 rounded hover:bg-yellow-500 hover:text-black transition-colors"
-                >
-                  {chord.name}
-                </button>
-              ))}
+              {line.chords.map((chord, ci) => {
+                const degree = getDegreeLabel(chord.name, degreeMap);
+                return (
+                  <div key={ci} className="flex flex-col items-center">
+                    <button
+                      onClick={() => onChordTap(chord)}
+                      className="text-yellow-400 text-sm font-mono font-bold bg-gray-800 px-2 py-0.5 rounded hover:bg-yellow-500 hover:text-black transition-colors"
+                    >
+                      {chord.name}
+                    </button>
+                    {degree && (
+                      <span className="text-gray-500 text-xs mt-0.5">
+                        {degree}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
           {/* 歌詞行 */}
