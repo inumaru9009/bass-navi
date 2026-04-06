@@ -26,7 +26,10 @@ type Props = {
   onClose: () => void;
 };
 
-// intervalName → ドット色のマッピング
+// 弦ラベル
+const STRING_NAMES: Record<1|2|3|4, string> = { 1: "G", 2: "D", 3: "A", 4: "E" };
+
+// intervalName → ドット色
 const DEGREE_COLOR: Record<string, string> = {
   "ルート":  "#E5B800",
   "5th":    "#4A90D9",
@@ -34,53 +37,31 @@ const DEGREE_COLOR: Record<string, string> = {
   "3rd":    "#888888",
   "♭7th":  "#9B7FD4",
   "maj7th": "#9B7FD4",
+  "4th":    "#9B7FD4",
   "♭5th":  "#D05050",
+  "6th":    "#888888",
+  "♭6th":  "#888888",
 };
-const DEGREE_TEXT_DARK = new Set(["ルート"]);
+const DARK_TEXT_DEGREES = new Set(["ルート"]);
 
-type ShapeLine = {
-  x1: number; y1: number;
-  x2: number; y2: number;
-  color: string;
-};
+type ShapeLine = { x1: number; y1: number; x2: number; y2: number; color: string };
 
-function calcShapeLines(
-  positions: BassPosition[],
-  fretToX: (f: number) => number,
-  stringToY: (s: number) => number
-): ShapeLine[] {
-  const lines: ShapeLine[] = [];
-  const roots  = positions.filter(p => p.intervalName === "ルート");
-  const fifths = positions.filter(p => p.intervalName === "5th");
+function PositionDiagram({
+  positions,
+}: {
+  positions: BassPosition[];
+  noteRoles: NoteRole[];
+}) {
+  if (!positions || positions.length === 0) return null;
 
-  for (let i = 0; i < roots.length - 1; i++) {
-    lines.push({
-      x1: fretToX(roots[i].fret),   y1: stringToY(roots[i].string),
-      x2: fretToX(roots[i+1].fret), y2: stringToY(roots[i+1].string),
-      color: "#E5B800",
-    });
-  }
-  if (roots.length > 0 && fifths.length > 0) {
-    lines.push({
-      x1: fretToX(roots[0].fret),  y1: stringToY(roots[0].string),
-      x2: fretToX(fifths[0].fret), y2: stringToY(fifths[0].string),
-      color: "#4A90D9",
-    });
-  }
-  return lines;
-}
-
-function PositionDiagram({ positions }: { positions: BassPosition[]; noteRoles: NoteRole[] }) {
-  if (positions.length === 0) return null;
-
-  const frets = positions.map(p => p.fret);
-  const minFret = Math.max(0, Math.min(...frets) - 1);
-  const maxFret = Math.max(...frets);
+  const allFrets = positions.map(p => p.fret);
+  const minFret = Math.max(0, Math.min(...allFrets) - 1);
+  const maxFret = Math.max(...allFrets);
   const displayCount = Math.max(maxFret - minFret + 3, 4);
 
-  const PAD_LEFT = 22;
+  const PAD_LEFT = 24;
   const PAD_TOP  = 8;
-  const FRET_W   = 48;
+  const FRET_W   = 52;
   const STR_GAP  = 18;
   const STRINGS: Array<1|2|3|4> = [4, 3, 2, 1];
 
@@ -90,7 +71,31 @@ function PositionDiagram({ positions }: { positions: BassPosition[]; noteRoles: 
   const fretToX = (f: number) => PAD_LEFT + (f - minFret + 0.5) * FRET_W;
   const strToY  = (s: number) => PAD_TOP  + (4 - s) * STR_GAP;
 
-  const shapeLines = calcShapeLines(positions, fretToX, strToY);
+  // シェイプ破線計算
+  const roots  = positions.filter(p => p.intervalName === "ルート");
+  const fifths = positions.filter(p => p.intervalName === "5th");
+  const shapeLines: ShapeLine[] = [];
+
+  for (let i = 0; i < roots.length - 1; i++) {
+    shapeLines.push({
+      x1: fretToX(roots[i].fret),   y1: strToY(roots[i].string),
+      x2: fretToX(roots[i+1].fret), y2: strToY(roots[i+1].string),
+      color: "#E5B800",
+    });
+  }
+  const lowestRoot = roots.length > 0
+    ? roots.reduce((a, b) => (a.string > b.string ? a : b), roots[0])
+    : null;
+  if (lowestRoot && fifths.length > 0) {
+    const nearestFifth = fifths.reduce((a, b) =>
+      Math.abs(a.string - lowestRoot.string) <= Math.abs(b.string - lowestRoot.string) ? a : b
+    );
+    shapeLines.push({
+      x1: fretToX(lowestRoot.fret),   y1: strToY(lowestRoot.string),
+      x2: fretToX(nearestFifth.fret), y2: strToY(nearestFifth.string),
+      color: "#4A90D9",
+    });
+  }
 
   return (
     <svg
@@ -122,7 +127,7 @@ function PositionDiagram({ positions }: { positions: BassPosition[]; noteRoles: 
         />
       ))}
 
-      {/* フレット番号 */}
+      {/* フレット番号ラベル */}
       {Array.from({ length: displayCount }, (_, i) => minFret + i).map(f => (
         <text
           key={f}
@@ -132,22 +137,30 @@ function PositionDiagram({ positions }: { positions: BassPosition[]; noteRoles: 
           textAnchor="middle"
           fill="#444"
         >
-          {f === 0 ? "開" : `${f + 1}f`}
+          {f === 0 ? "開" : `${f}f`}
         </text>
       ))}
 
-      {/* 弦ラベル */}
+      {/* 弦ラベル（G/D/A/E） */}
       {STRINGS.map(s => (
-        <text key={s} x={PAD_LEFT - 10} y={strToY(s) + 3} fontSize="7" textAnchor="middle" fill="#555">
-          {["G","D","A","E"][4 - s]}
+        <text
+          key={s}
+          x={PAD_LEFT - 12}
+          y={strToY(s) + 3}
+          fontSize="7"
+          textAnchor="middle"
+          fill="#555"
+        >
+          {STRING_NAMES[s]}
         </text>
       ))}
 
-      {/* シェイプ破線（ドットより前に描画して背面に） */}
+      {/* シェイプ破線（ドットより前＝背面に描画） */}
       {shapeLines.map((l, i) => (
         <line
           key={i}
-          x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
+          x1={l.x1} y1={l.y1}
+          x2={l.x2} y2={l.y2}
           stroke={l.color}
           strokeWidth="1"
           strokeDasharray="3,2"
@@ -160,13 +173,19 @@ function PositionDiagram({ positions }: { positions: BassPosition[]; noteRoles: 
         const cx = fretToX(pos.fret);
         const cy = strToY(pos.string);
         const iname = pos.intervalName ?? "ルート";
-        const fill  = DEGREE_COLOR[iname] ?? "#666";
-        const textFill = DEGREE_TEXT_DARK.has(iname) ? "#12141A" : "#ffffff";
+        const fill = DEGREE_COLOR[iname] ?? "#666";
+        const textFill = DARK_TEXT_DEGREES.has(iname) ? "#12141A" : "#ffffff";
         const label = INTERVAL_SHORT[iname] ?? iname;
         return (
           <g key={i}>
-            <circle cx={cx} cy={cy} r="7.5" fill={fill} />
-            <text x={cx} y={cy + 3} fontSize="7.5" textAnchor="middle" fill={textFill} fontWeight="500">
+            <circle cx={cx} cy={cy} r="8" fill={fill} />
+            <text
+              x={cx} y={cy + 3}
+              fontSize="7.5"
+              textAnchor="middle"
+              fill={textFill}
+              fontWeight="500"
+            >
               {label}
             </text>
           </g>
