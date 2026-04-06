@@ -72,6 +72,20 @@ export default function ScoreView({ song, onBack }: Props) {
             🎸 {currentSection.playGuide}
           </p>
         )}
+        <div className="flex gap-3 mt-1">
+          <span className="flex items-center gap-1 text-xs text-gray-400">
+            <span className="w-3 h-3 rounded-sm bg-yellow-600 inline-block" />トニック
+          </span>
+          <span className="flex items-center gap-1 text-xs text-gray-400">
+            <span className="w-3 h-3 rounded-sm bg-red-700 inline-block" />ドミナント
+          </span>
+          <span className="flex items-center gap-1 text-xs text-gray-400">
+            <span className="w-3 h-3 rounded-sm bg-blue-700 inline-block" />サブドミナント
+          </span>
+          <span className="flex items-center gap-1 text-xs text-gray-400">
+            <span className="w-3 h-3 rounded-sm bg-gray-700 inline-block" />その他
+          </span>
+        </div>
       </div>
 
       {/* 本文（上部バー分のパディング） */}
