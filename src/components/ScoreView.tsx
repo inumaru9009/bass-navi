@@ -3,7 +3,7 @@
 import { useState, useRef, useMemo } from "react";
 import type { Song, ChordToken } from "../types";
 import { getChordDetail } from "../lib/chordParser";
-import { getDegreeMap } from "../lib/degreeAnalyzer";
+import { getDegreeMap, getDegreeLabel } from "../lib/degreeAnalyzer";
 import ChordModal from "./ChordModal";
 import SectionBlock from "./SectionBlock";
 
@@ -106,6 +106,7 @@ export default function ScoreView({ song, onBack }: Props) {
       {selectedChord && (
         <ChordModal
           detail={getChordDetail(selectedChord)}
+          degree={getDegreeLabel(selectedChord.name, degreeMap)}
           onClose={() => setSelectedChord(null)}
         />
       )}
