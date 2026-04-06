@@ -67,8 +67,10 @@ export async function analyzeWithGemini(
   }
 
   const data = await response.json();
-  const text: string =
-    data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+  const parts = data?.candidates?.[0]?.content?.parts ?? [];
+  // gemini-2.5-flashは思考トークン(thought:true)をparts[0]に返すことがある
+  const textPart = parts.find((p: { thought?: boolean; text?: string }) => !p.thought && p.text);
+  const text: string = textPart?.text ?? "";
 
   // JSON部分を抽出（複数パターン対応）
   const jsonMatch = text.match(/\{[\s\S]*\}/);
