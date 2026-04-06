@@ -73,7 +73,7 @@ export function generateTab(pattern: NoteEvent[], rootNote: string, beats = 16):
     }
 
     const label = STRING_NAMES[str];
-    return `${label}|${cells.join("-")}|`;
+    return `${label}|${cells.join("")}|`;
   });
 
   return lines.join("\n");
