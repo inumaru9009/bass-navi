@@ -7,14 +7,23 @@ const GEMINI_API_URL =
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string;
 
+// 譜面テキストから行番号付きの要約を生成（歌詞を省略してコード行のみ残す）
+function summarizeForGemini(rawText: string): string {
+  const lines = rawText.split("\n");
+  return lines
+    .map((line, i) => `${i}:${line}`)
+    .join("\n");
+}
+
 function buildPrompt(rawText: string): string {
+  const summarized = summarizeForGemini(rawText);
   return `
 あなたは音楽理論とベース演奏に詳しいアシスタントです。
-以下の歌詞コード譜を解析し、JSONのみを返してください。
+以下の譜面テキスト（行番号付き）を解析し、JSONのみを返してください。
 前置き・説明・マークダウンは一切不要です。JSONだけ返してください。
 
-## 譜面テキスト
-${rawText}
+## 譜面テキスト（行番号:内容）
+${summarized}
 
 ## 出力形式
 {
@@ -48,7 +57,7 @@ ${rawText}
 - 同じコード進行・歌詞が繰り返されるブロックは同じsectionTypeにする
 
 ## 注意事項
-- sectionsのstartLine/endLineは譜面テキストの行番号（0始まり）
+- startLine/endLineは上記の行番号（0始まりの数値）を使う
 - 全行をいずれかのセクションに必ず含める（行の抜けを作らない）
 - warningsは危険ポイントがない場合は空配列
 - playGuideは長文NG、15文字以内の短文
