@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+@media print {
+  /* 固定ヘッダーを非表示 */
+  .fixed { display: none !important; }
+  /* スクロール制限を解除して全体表示 */
+  #score-full {
+    overflow: visible !important;
+    height: auto !important;
+    padding-top: 1rem !important;
+  }
+  /* 背景色を維持 */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body { background: #000 !important; }
+}
