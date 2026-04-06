@@ -1,7 +1,7 @@
 // src/components/PhraseScreen.tsx
 
 import { useState } from "react";
-import { phraseData, getQualityKey } from "../lib/phraseData";
+import { phraseData, getQualityKey, getRootNote, generateTab } from "../lib/phraseData";
 import type { PhraseCategory } from "../lib/phraseData";
 
 interface Props {
@@ -19,6 +19,7 @@ export default function PhraseScreen({ chordName, onBack }: Props) {
   const [activeTab, setActiveTab] = useState<PhraseCategory>("root");
 
   const qualityKey = getQualityKey(chordName);
+  const rootNote = getRootNote(chordName);
   const phraseSet = phraseData[qualityKey] ?? phraseData["M"];
   const phrases = phraseSet[activeTab] ?? [];
 
@@ -75,7 +76,7 @@ export default function PhraseScreen({ chordName, onBack }: Props) {
                 </span>
               </div>
               <pre className="font-mono text-xs text-gray-400 bg-gray-950 rounded px-3 py-2 leading-relaxed mb-2 whitespace-pre overflow-x-auto">
-                {phrase.tab}
+                {generateTab(phrase.pattern, rootNote, phrase.beats)}
               </pre>
               <p className="text-xs text-gray-500 leading-relaxed">{phrase.tip}</p>
             </div>
