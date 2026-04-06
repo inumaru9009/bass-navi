@@ -66,7 +66,7 @@ export async function analyzeWithGemini(
       contents: [{ parts: [{ text: buildPrompt(rawText) }] }],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 16384,
       },
     }),
   });
