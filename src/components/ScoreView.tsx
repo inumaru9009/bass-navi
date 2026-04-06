@@ -30,19 +30,30 @@ export default function ScoreView({ song, onBack }: Props) {
     const el = document.getElementById("score-full");
     if (!el) return;
 
-    const canvas = await html2canvas(el, {
-      backgroundColor: "#000000",
-      scale: 2,
-      useCORS: true,
-      scrollY: 0,
-      windowHeight: el.scrollHeight,
-      height: el.scrollHeight,
-    });
+    // overflow解除して全体をキャプチャ
+    const prevOverflow = el.style.overflow;
+    const prevHeight = el.style.height;
+    el.style.overflow = "visible";
+    el.style.height = "auto";
 
-    const link = document.createElement("a");
-    link.download = `${song.title ?? "bass-navi"}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    try {
+      const canvas = await html2canvas(el, {
+        backgroundColor: "#000000",
+        scale: 2,
+        useCORS: true,
+        scrollY: -window.scrollY,
+        windowHeight: el.scrollHeight,
+        height: el.scrollHeight,
+      });
+
+      const link = document.createElement("a");
+      link.download = `${song.title ?? "bass-navi"}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } finally {
+      el.style.overflow = prevOverflow;
+      el.style.height = prevHeight;
+    }
   }
 
   return (
