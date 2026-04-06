@@ -54,29 +54,31 @@ const STRING_NAMES: Record<1 | 2 | 3 | 4, string> = {
  * パターンとルート音名からタブ譜文字列を生成する
  */
 export function generateTab(pattern: NoteEvent[], rootNote: string, beats = 16): string {
-  const rootSemitone = NOTE_SEMITONES[rootNote] ?? 9; // デフォルトA
-
+  const rootSemitone = NOTE_SEMITONES[rootNote] ?? 9;
   const usedStrings = [...new Set(pattern.map(e => e.string))].sort((a, b) => a - b);
 
-  const lines = usedStrings.map(str => {
-    const cells: string[] = Array(beats).fill("-");
-
+  return usedStrings.map(str => {
+    const eventMap = new Map<number, number>();
     for (const ev of pattern) {
       if (ev.string !== str) continue;
       const noteSemitone = (rootSemitone + ev.semitoneOffset) % 12;
-      const fret = noteToFret(str, noteSemitone);
-      const fretStr = fret === 0 ? "0" : String(fret);
-      cells[ev.beat] = fretStr;
-      if (fretStr.length > 1 && ev.beat + 1 < beats) {
-        cells[ev.beat + 1] = "";
+      eventMap.set(ev.beat, noteToFret(str, noteSemitone));
+    }
+
+    // 1beat = 1文字。2桁フレット（10f以上）は1の位のみ表示
+    let line = "";
+    for (let i = 0; i < beats; i++) {
+      if (eventMap.has(i)) {
+        const fret = eventMap.get(i)!;
+        line += String(fret % 10);
+      } else {
+        line += "-";
       }
     }
 
     const label = STRING_NAMES[str];
-    return `${label}|${cells.join("")}|`;
-  });
-
-  return lines.join("\n");
+    return `${label}|${line}|`;
+  }).join("\n");
 }
 
 // ── フレーズデータ ────────────────────────────────────────

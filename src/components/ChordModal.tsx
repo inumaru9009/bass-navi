@@ -76,7 +76,7 @@ function PositionDiagram({ positions }: { positions: BassPosition[]; noteRoles: 
   const frets = positions.map(p => p.fret);
   const minFret = Math.max(0, Math.min(...frets) - 1);
   const maxFret = Math.max(...frets);
-  const displayCount = Math.max(maxFret - minFret + 1, 4);
+  const displayCount = Math.max(maxFret - minFret + 3, 4);
 
   const PAD_LEFT = 22;
   const PAD_TOP  = 8;
