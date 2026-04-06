@@ -7,11 +7,46 @@ import BookmarkletGuide from "./components/BookmarkletGuide";
 
 type AppState = "input" | "loading" | "result" | "error" | "guide";
 
+const STORAGE_KEY = "bass-navi-song";
+
 export default function App() {
-  const [state, setState] = useState<AppState>("input");
+  const [song, setSong] = useState<Song | null>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return null;
+      return JSON.parse(saved) as Song;
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+  });
+
+  const [state, setState] = useState<AppState>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return "input";
+      const parsed = JSON.parse(saved);
+      return parsed ? "result" : "input";
+    } catch {
+      return "input";
+    }
+  });
+
   const [rawText, setRawText] = useState("");
-  const [song, setSong] = useState<Song | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // song更新時にlocalStorageに保存
+  useEffect(() => {
+    if (song) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(song));
+      } catch {
+        console.warn("localStorage保存失敗");
+      }
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }, [song]);
 
   // URLパラメータから譜面テキストを受け取る
   useEffect(() => {
@@ -22,6 +57,12 @@ export default function App() {
       window.history.replaceState({}, "", "/");
     }
   }, []);
+
+  function handleBack() {
+    localStorage.removeItem(STORAGE_KEY);
+    setSong(null);
+    setState("input");
+  }
 
   async function handleAnalyze() {
     if (!rawText.trim()) return;
@@ -38,7 +79,7 @@ export default function App() {
   }
 
   if (state === "result" && song) {
-    return <ScoreView song={song} onBack={() => setState("input")} />;
+    return <ScoreView song={song} onBack={handleBack} />;
   }
 
   if (state === "guide") {

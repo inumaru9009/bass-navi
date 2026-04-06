@@ -12,10 +12,16 @@ function normalizeNote(note: string): string {
   return NOTE_ALIASES[note] ?? note;
 }
 
+// ♭/♯をASCIIに正規化
+function normalizeChordStr(str: string): string {
+  return str.replace(/♭/g, "b").replace(/♯/g, "#").trim();
+}
+
 // コード文字列をパース
 export function parseChord(chordStr: string): ChordToken {
-  const slashMatch = chordStr.match(/^(.+)\/([A-G][b#]?)$/);
-  let name = chordStr;
+  const normalized = normalizeChordStr(chordStr);
+  const slashMatch = normalized.match(/^(.+)\/([A-G][b#]?)$/);
+  let name = normalized;
   let bass: string | undefined;
 
   if (slashMatch) {
@@ -36,9 +42,8 @@ export function parseChord(chordStr: string): ChordToken {
 
 // コード行かどうか判定
 export function isChordLine(line: string): boolean {
-  const cleaned = line.trim();
+  const cleaned = normalizeChordStr(line.trim());
   if (!cleaned) return false;
-  // コードっぽいトークンが含まれているか
   const tokens = cleaned.split(/\s+/);
   const chordPattern = /^[A-G][b#]?(m|maj|min|aug|dim|sus|add)?[0-9]*(\/[A-G][b#]?)?$/;
   const chordCount = tokens.filter(t => chordPattern.test(t)).length;
@@ -47,7 +52,8 @@ export function isChordLine(line: string): boolean {
 
 // コード行からChordTokenの配列を抽出
 export function extractChords(line: string): ChordToken[] {
-  const tokens = line.split(/\s+/).filter(Boolean);
+  const normalized = normalizeChordStr(line);
+  const tokens = normalized.split(/\s+/).filter(Boolean);
   const chordPattern = /^[A-G][b#]?(m|maj|min|aug|dim|sus|add)?[0-9]*(\/[A-G][b#]?)?$/;
   return tokens
     .filter(t => chordPattern.test(t))
