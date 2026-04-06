@@ -4,7 +4,7 @@
 
 U-FRETなどの歌詞コード譜をGemini APIで解析し、セクション分け・演奏ガイド・コード詳細を表示する初見ベーシスト向け演奏支援ツール。
 
-- **本番URL**: https://bass-navi-code.vercel.app/
+- **本番URL**: https://bass-navi.vercel.app/
 - **GitHub**: https://github.com/inumaru9009/bass-navi
 - **技術スタック**: React 19 + Vite 8 + Tailwind CSS v4 + Gemini API
 
