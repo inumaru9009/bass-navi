@@ -84,14 +84,14 @@ export async function analyzeWithGemini(
   // JSON部分を抽出（複数パターン対応）
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
-    throw new Error("Gemini APIのレスポンスをパースできませんでした");
+    throw new Error(`パース失敗: レスポンス="${text.slice(0, 100)}"`);
   }
 
   const cleaned = jsonMatch[0].trim();
 
   try {
     return JSON.parse(cleaned) as GeminiAnalysisResult;
-  } catch {
-    throw new Error("Gemini APIのレスポンスをパースできませんでした");
+  } catch (e) {
+    throw new Error(`JSONパース失敗: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
