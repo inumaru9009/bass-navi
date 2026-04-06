@@ -62,9 +62,11 @@ function PositionDiagram({
               p => p.string === str && p.fret === f
             );
             const hit = hitIndex !== -1;
-            const role = noteRoles[hitIndex];
-            const isRoot = role?.intervalName === "ルート";
-            const label = role ? (INTERVAL_SHORT[role.intervalName] ?? "●") : "●";
+            // BASS_POSITIONSはルート音のポジションのみ格納しているため、
+            // すべてのポジションはnoteRoles[0]（ルート）に対応する
+            const role = hit ? noteRoles[0] : undefined;
+            const isRoot = true;
+            const label = role ? (INTERVAL_SHORT[role.intervalName] ?? "R") : "R";
             return (
               <div
                 key={f}

@@ -49,7 +49,7 @@ export type DegreeFunction = "tonic" | "dominant" | "subdominant" | "other" | ""
 export function getDegreeFunction(degree: string): DegreeFunction {
   if (!degree) return "";
   if (/^(I|Im|IIIm|VIm)$/.test(degree)) return "tonic";
-  if (/^(V|V7|VIIm|VIIm♭5)$/.test(degree)) return "dominant";
+  if (/^(V|Vm|V7|VIIm|VIIm♭5)$/.test(degree)) return "dominant";
   if (/^(IV|IVm|IIm)$/.test(degree)) return "subdominant";
   return "other";
 }
