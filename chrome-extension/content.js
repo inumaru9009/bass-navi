@@ -1,8 +1,17 @@
-function extractScore() {
+async function extractScore() {
   const sheet = document.querySelector(".musical-sheet");
   if (!sheet) return null;
 
+  // 曲名・アーティスト取得
+  const title = document.querySelector("h1")?.textContent?.trim()
+    || document.title.split("|")[0].trim();
+  const artist = document.querySelector(".p-detail-cont__artist")?.textContent?.trim() || "";
+
   const lines = [];
+  if (title) lines.push("曲名: " + title);
+  if (artist) lines.push("アーティスト: " + artist);
+  lines.push("---");
+
   const rows = sheet.querySelectorAll(".chord-row");
 
   rows.forEach(row => {
@@ -33,8 +42,7 @@ function extractScore() {
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.action === "extract") {
-    const text = extractScore();
-    sendResponse({ text });
+    extractScore().then(text => sendResponse({ text }));
   }
   return true;
 });
