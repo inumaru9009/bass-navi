@@ -61,11 +61,18 @@ export type BassPosition = {
   finger?: number;
 };
 
+export type NoteRole = {
+  note: string;
+  intervalName: string;
+  role: string;
+};
+
 export type ChordDetail = {
   name: string;
   root: string;
   bass?: string;
   safeNotes: string[];
+  noteRoles: NoteRole[];
   positions: BassPosition[];
   advice: string;
 };

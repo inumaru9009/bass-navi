@@ -97,12 +97,26 @@ export default function ChordModal({ detail, onClose }: Props) {
           )}
         </div>
 
-        {/* 安全音 */}
-        <div className="mb-3">
-          <span className="text-gray-400 text-sm">安全音 </span>
-          <span className="text-green-400 font-mono font-bold">
-            {detail.safeNotes.join("  ")}
-          </span>
+        {/* 構成音と役割 */}
+        <div className="mb-4">
+          <p className="text-gray-400 text-xs mb-2">構成音と役割</p>
+          <div className="space-y-1">
+            {detail.noteRoles.map((nr, i) => (
+              <div key={i} className="flex items-baseline gap-3">
+                <span className={`font-mono font-bold text-sm w-6 ${
+                  i === 0 ? "text-yellow-400" : "text-green-400"
+                }`}>
+                  {nr.note}
+                </span>
+                <span className="text-gray-400 text-xs w-16">
+                  {nr.intervalName}
+                </span>
+                <span className="text-gray-300 text-xs">
+                  {nr.role}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ポジション図 */}

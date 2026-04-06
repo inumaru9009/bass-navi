@@ -1,6 +1,6 @@
 // src/lib/chordParser.ts
 
-import type { ChordToken, ChordDetail, BassPosition } from "../types";
+import type { ChordToken, ChordDetail, BassPosition, NoteRole } from "../types";
 
 // 音名の定義
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
@@ -95,6 +95,22 @@ const CHORD_TONES: Record<string, number[]> = {
   "m9":   [0, 3, 7, 10, 14],
 };
 
+const INTERVAL_ROLES: Record<number, { name: string; role: string }> = {
+  0:  { name: "ルート",  role: "土台。必ず弾く" },
+  1:  { name: "♭2nd",   role: "緊張感のある音" },
+  2:  { name: "2nd",     role: "浮遊感を加える音" },
+  3:  { name: "♭3rd",   role: "暗さを決める音（マイナーの色）" },
+  4:  { name: "3rd",     role: "明るさを決める音（メジャーの色）" },
+  5:  { name: "4th",     role: "落ち着きを加える音" },
+  6:  { name: "♭5th",   role: "不安定・緊張感のある音" },
+  7:  { name: "5th",     role: "安定感を加える音" },
+  8:  { name: "♭6th",   role: "哀愁を加える音" },
+  9:  { name: "6th",     role: "明るい余韻を加える音" },
+  10: { name: "♭7th",   role: "ブルージーな響きを加える音" },
+  11: { name: "maj7th",  role: "オシャレさ・浮遊感を加える音" },
+  14: { name: "9th",     role: "広がりを加える音" },
+};
+
 function getSafeNotes(root: string, quality: string): string[] {
   const rootIdx = NOTES.indexOf(root);
   if (rootIdx === -1) return [root];
@@ -107,6 +123,14 @@ export function getChordDetail(token: ChordToken): ChordDetail {
   const root = token.bass ?? token.root;
   const safeNotes = getSafeNotes(token.root, token.quality);
   const positions = BASS_POSITIONS[root] ?? BASS_POSITIONS[token.root] ?? [];
+
+  const rootIdx = NOTES.indexOf(token.root);
+  const intervals = CHORD_TONES[token.quality] ?? CHORD_TONES[""] ?? [0, 4, 7];
+  const noteRoles: NoteRole[] = rootIdx === -1 ? [] : intervals.map(i => ({
+    note: NOTES[(rootIdx + i) % 12],
+    intervalName: INTERVAL_ROLES[i]?.name ?? `${i}th`,
+    role: INTERVAL_ROLES[i]?.role ?? "",
+  }));
 
   let advice = "ルート中心でOK";
   if (token.bass) {
@@ -124,6 +148,7 @@ export function getChordDetail(token: ChordToken): ChordDetail {
     root: token.root,
     bass: token.bass,
     safeNotes,
+    noteRoles,
     positions,
     advice,
   };
