@@ -76,6 +76,7 @@ export async function analyzeWithGemini(
       generationConfig: {
         temperature: 0.2,
         maxOutputTokens: 16384,
+        thinkingConfig: { thinkingBudget: 0 },
       },
     }),
   });
