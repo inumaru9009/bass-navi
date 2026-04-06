@@ -151,10 +151,12 @@ export default function ChordModal({ detail, onClose }: Props) {
           <PositionDiagram positions={detail.positions} noteRoles={detail.noteRoles} />
         </div>
 
-        {/* 一言アドバイス */}
-        <div className="bg-gray-800 rounded p-3 text-green-400 text-sm font-bold">
-          🎸 {detail.advice}
-        </div>
+        {/* 一言アドバイス（デフォルト以外のみ表示） */}
+        {detail.advice !== "ルート中心でOK" && (
+          <div className="bg-gray-800 rounded p-3 text-green-400 text-sm font-bold">
+            🎸 {detail.advice}
+          </div>
+        )}
       </div>
     </div>
   );
