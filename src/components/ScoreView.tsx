@@ -6,6 +6,7 @@ import { getChordDetail } from "../lib/chordParser";
 import { getDegreeMap, getDegreeLabel } from "../lib/degreeAnalyzer";
 import ChordModal from "./ChordModal";
 import SectionBlock from "./SectionBlock";
+import Tooltip from "./Tooltip";
 
 type Props = {
   song: Song;
@@ -41,9 +42,21 @@ export default function ScoreView({ song, onBack }: Props) {
             {song.title}
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-yellow-400 text-sm">
-              {song.key ? `Key: ${song.key}` : ""}
-            </span>
+            {song.key ? (
+              <Tooltip
+                position="bottom"
+                content={
+                  <>
+                    <p className="font-bold text-yellow-400 mb-1">Key（キー）とは？</p>
+                    <p>曲の「中心の音」。このKeyを基準にコードの役割（トニック・ドミナントなど）が決まる。ベースはKeyの音を意識すると安定感が増す。</p>
+                  </>
+                }
+              >
+                <span className="text-yellow-400 text-sm underline decoration-dotted cursor-default">
+                  Key: {song.key}
+                </span>
+              </Tooltip>
+            ) : null}
             <button
               onClick={handleSaveImage}
               className="text-gray-400 text-xs bg-gray-800 px-2 py-1 rounded"
@@ -73,18 +86,26 @@ export default function ScoreView({ song, onBack }: Props) {
           </p>
         )}
         <div className="flex gap-3 mt-1">
-          <span className="flex items-center gap-1 text-xs text-gray-400">
-            <span className="w-3 h-3 rounded-sm bg-yellow-600 inline-block" />トニック
-          </span>
-          <span className="flex items-center gap-1 text-xs text-gray-400">
-            <span className="w-3 h-3 rounded-sm bg-red-700 inline-block" />ドミナント
-          </span>
-          <span className="flex items-center gap-1 text-xs text-gray-400">
-            <span className="w-3 h-3 rounded-sm bg-blue-700 inline-block" />サブドミナント
-          </span>
-          <span className="flex items-center gap-1 text-xs text-gray-400">
-            <span className="w-3 h-3 rounded-sm bg-gray-700 inline-block" />その他
-          </span>
+          <Tooltip position="bottom" content={<><p className="font-bold text-yellow-400 mb-1">トニック</p><p>曲の「ホーム」。安定・落ち着きを感じさせるコード。ルート音をしっかり弾いてOK。</p></>}>
+            <span className="flex items-center gap-1 text-xs text-gray-400 cursor-default">
+              <span className="w-3 h-3 rounded-sm bg-yellow-600 inline-block" />トニック
+            </span>
+          </Tooltip>
+          <Tooltip position="bottom" content={<><p className="font-bold text-red-400 mb-1">ドミナント</p><p>緊張感を生むコード。次のトニックへ「解決」しようとする引力がある。</p></>}>
+            <span className="flex items-center gap-1 text-xs text-gray-400 cursor-default">
+              <span className="w-3 h-3 rounded-sm bg-red-700 inline-block" />ドミナント
+            </span>
+          </Tooltip>
+          <Tooltip position="bottom" content={<><p className="font-bold text-blue-400 mb-1">サブドミナント</p><p>トニックとドミナントの中間。浮遊感・広がりを出す。</p></>}>
+            <span className="flex items-center gap-1 text-xs text-gray-400 cursor-default">
+              <span className="w-3 h-3 rounded-sm bg-blue-700 inline-block" />サブドミナント
+            </span>
+          </Tooltip>
+          <Tooltip position="bottom" content="キーのスケール外のコード。転調や色付けに使われる。注意して聴いてみよう。">
+            <span className="flex items-center gap-1 text-xs text-gray-400 cursor-default">
+              <span className="w-3 h-3 rounded-sm bg-gray-700 inline-block" />その他
+            </span>
+          </Tooltip>
         </div>
       </div>
 

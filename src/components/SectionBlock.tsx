@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { Section, ChordToken } from "../types";
 import { getDegreeLabel, getDegreeFunction } from "../lib/degreeAnalyzer";
+import Tooltip from "./Tooltip";
 
 const degreeFunctionColors: Record<string, string> = {
   tonic:       "bg-yellow-600 text-black hover:bg-yellow-400",
@@ -19,6 +20,22 @@ type Props = {
   onVisible: () => void;
   degreeMap: Record<string, string>;
 };
+
+function getDegreeTooltip(degree: string, degreeFunc: string): React.ReactNode {
+  const funcDesc: Record<string, string> = {
+    tonic:       "トニック — 安定・ホーム。ルートをどっしり弾こう。",
+    dominant:    "ドミナント — 緊張・解決の引力。次のコードへ向かう勢いを出そう。",
+    subdominant: "サブドミナント — 浮遊・広がり。柔らかく弾くと映える。",
+    other:       "ノンダイアトニック — キー外のコード。ルートをしっかり押さえよう。",
+  };
+  const desc = funcDesc[degreeFunc] ?? "";
+  return (
+    <>
+      <p className="font-bold text-white mb-1">{degree}</p>
+      <p>{desc}</p>
+    </>
+  );
+}
 
 export default function SectionBlock({
   section,
@@ -91,9 +108,11 @@ export default function SectionBlock({
                       {chord.name}
                     </button>
                     {degree && (
-                      <span className="text-gray-500 text-xs mt-0.5">
-                        {degree}
-                      </span>
+                      <Tooltip content={getDegreeTooltip(degree, degreeFunc)}>
+                        <span className="text-gray-500 text-xs mt-0.5 cursor-default">
+                          {degree}
+                        </span>
+                      </Tooltip>
                     )}
                   </div>
                 );

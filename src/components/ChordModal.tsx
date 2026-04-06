@@ -26,66 +26,153 @@ type Props = {
   onClose: () => void;
 };
 
-// 弦の名前
-const STRING_NAMES: Record<number, string> = {
-  1: "G",
-  2: "D",
-  3: "A",
-  4: "E",
+// intervalName → ドット色のマッピング
+const DEGREE_COLOR: Record<string, string> = {
+  "ルート":  "#E5B800",
+  "5th":    "#4A90D9",
+  "♭3rd":  "#888888",
+  "3rd":    "#888888",
+  "♭7th":  "#9B7FD4",
+  "maj7th": "#9B7FD4",
+  "♭5th":  "#D05050",
+};
+const DEGREE_TEXT_DARK = new Set(["ルート"]);
+
+type ShapeLine = {
+  x1: number; y1: number;
+  x2: number; y2: number;
+  color: string;
 };
 
-function PositionDiagram({
-  positions,
-  noteRoles,
-}: {
-  positions: BassPosition[];
-  noteRoles: NoteRole[];
-}) {
-  const frets = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-  const usedFrets = positions.map(p => p.fret);
-  const minFret = Math.max(0, Math.min(...usedFrets) - 1);
-  const displayFrets = frets.slice(minFret, minFret + 5);
+function calcShapeLines(
+  positions: BassPosition[],
+  fretToX: (f: number) => number,
+  stringToY: (s: number) => number
+): ShapeLine[] {
+  const lines: ShapeLine[] = [];
+  const roots  = positions.filter(p => p.intervalName === "ルート");
+  const fifths = positions.filter(p => p.intervalName === "5th");
+
+  for (let i = 0; i < roots.length - 1; i++) {
+    lines.push({
+      x1: fretToX(roots[i].fret),   y1: stringToY(roots[i].string),
+      x2: fretToX(roots[i+1].fret), y2: stringToY(roots[i+1].string),
+      color: "#E5B800",
+    });
+  }
+  if (roots.length > 0 && fifths.length > 0) {
+    lines.push({
+      x1: fretToX(roots[0].fret),  y1: stringToY(roots[0].string),
+      x2: fretToX(fifths[0].fret), y2: stringToY(fifths[0].string),
+      color: "#4A90D9",
+    });
+  }
+  return lines;
+}
+
+function PositionDiagram({ positions }: { positions: BassPosition[]; noteRoles: NoteRole[] }) {
+  if (positions.length === 0) return null;
+
+  const frets = positions.map(p => p.fret);
+  const minFret = Math.max(0, Math.min(...frets) - 1);
+  const maxFret = Math.max(...frets);
+  const displayCount = Math.max(maxFret - minFret + 1, 4);
+
+  const PAD_LEFT = 22;
+  const PAD_TOP  = 8;
+  const FRET_W   = 48;
+  const STR_GAP  = 18;
+  const STRINGS: Array<1|2|3|4> = [4, 3, 2, 1];
+
+  const svgW = PAD_LEFT + displayCount * FRET_W + 12;
+  const svgH = PAD_TOP + 3 * STR_GAP + 22;
+
+  const fretToX = (f: number) => PAD_LEFT + (f - minFret + 0.5) * FRET_W;
+  const strToY  = (s: number) => PAD_TOP  + (4 - s) * STR_GAP;
+
+  const shapeLines = calcShapeLines(positions, fretToX, strToY);
 
   return (
-    <div className="mt-1">
-      <div className="flex text-xs text-gray-600 mb-1">
-        <span className="w-6" />
-        {displayFrets.map(f => (
-          <span key={f} className="w-8 text-center">
-            {f === 0 ? "開" : f}
-          </span>
-        ))}
-      </div>
-      {[1, 2, 3, 4].map(str => (
-        <div key={str} className="flex items-center mb-1">
-          <span className="w-6 text-xs text-gray-600">
-            {STRING_NAMES[str]}
-          </span>
-          {displayFrets.map(f => {
-            const hitIndex = positions.findIndex(
-              p => p.string === str && p.fret === f
-            );
-            const hit = hitIndex !== -1;
-            // BASS_POSITIONSはルート音のポジションのみ格納しているため、
-            // すべてのポジションはnoteRoles[0]（ルート）に対応する
-            const role = hit ? noteRoles[0] : undefined;
-            const label = role ? (INTERVAL_SHORT[role.intervalName] ?? "R") : "R";
-            return (
-              <div
-                key={f}
-                className="w-8 h-6 border-b border-gray-700 flex items-center justify-center"
-              >
-                {hit ? (
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-black text-xs font-bold bg-yellow-400">
-                    {label}
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
+    <svg
+      viewBox={`0 0 ${svgW} ${svgH}`}
+      style={{ width: "100%", display: "block" }}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* 弦 */}
+      {STRINGS.map((s, i) => (
+        <line
+          key={s}
+          x1={PAD_LEFT} y1={strToY(s)}
+          x2={svgW - 8} y2={strToY(s)}
+          stroke="#3a3a3a"
+          strokeWidth={1.5 - i * 0.2}
+        />
       ))}
-    </div>
+
+      {/* フレット縦線 */}
+      {Array.from({ length: displayCount + 1 }, (_, i) => minFret + i).map(f => (
+        <line
+          key={f}
+          x1={PAD_LEFT + (f - minFret) * FRET_W}
+          y1={PAD_TOP - 4}
+          x2={PAD_LEFT + (f - minFret) * FRET_W}
+          y2={strToY(1) + 4}
+          stroke={f === minFret ? "#666" : "#333"}
+          strokeWidth={f === minFret ? 1.8 : 0.8}
+        />
+      ))}
+
+      {/* フレット番号 */}
+      {Array.from({ length: displayCount }, (_, i) => minFret + i).map(f => (
+        <text
+          key={f}
+          x={fretToX(f)}
+          y={svgH - 2}
+          fontSize="7"
+          textAnchor="middle"
+          fill="#444"
+        >
+          {f === 0 ? "開" : `${f + 1}f`}
+        </text>
+      ))}
+
+      {/* 弦ラベル */}
+      {STRINGS.map(s => (
+        <text key={s} x={PAD_LEFT - 10} y={strToY(s) + 3} fontSize="7" textAnchor="middle" fill="#555">
+          {["G","D","A","E"][4 - s]}
+        </text>
+      ))}
+
+      {/* シェイプ破線（ドットより前に描画して背面に） */}
+      {shapeLines.map((l, i) => (
+        <line
+          key={i}
+          x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
+          stroke={l.color}
+          strokeWidth="1"
+          strokeDasharray="3,2"
+          opacity="0.4"
+        />
+      ))}
+
+      {/* ポジションドット */}
+      {positions.map((pos, i) => {
+        const cx = fretToX(pos.fret);
+        const cy = strToY(pos.string);
+        const iname = pos.intervalName ?? "ルート";
+        const fill  = DEGREE_COLOR[iname] ?? "#666";
+        const textFill = DEGREE_TEXT_DARK.has(iname) ? "#12141A" : "#ffffff";
+        const label = INTERVAL_SHORT[iname] ?? iname;
+        return (
+          <g key={i}>
+            <circle cx={cx} cy={cy} r="7.5" fill={fill} />
+            <text x={cx} y={cy + 3} fontSize="7.5" textAnchor="middle" fill={textFill} fontWeight="500">
+              {label}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 

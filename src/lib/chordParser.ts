@@ -125,6 +125,67 @@ const INTERVAL_ROLES: Record<number, { name: string; role: string }> = {
   14: { name: "9th",     role: "広がりを加える音" },
 };
 
+// コードクオリティ別の相対ポジションテンプレート
+// fretOffset: ルートフレットからの相対フレット数（A弦ルート基準）
+type RelPos = { string: 1|2|3|4; fretOffset: number; intervalName: string };
+
+const SHAPE_TEMPLATES: Record<string, RelPos[]> = {
+  "": [
+    { string: 3, fretOffset: 0,  intervalName: "ルート" },
+    { string: 2, fretOffset: 2,  intervalName: "5th"   },
+    { string: 2, fretOffset: -3, intervalName: "3rd"   },
+    { string: 1, fretOffset: 2,  intervalName: "ルート" },
+  ],
+  "m": [
+    { string: 3, fretOffset: 0,  intervalName: "ルート" },
+    { string: 2, fretOffset: 2,  intervalName: "5th"   },
+    { string: 2, fretOffset: -4, intervalName: "♭3rd"  },
+    { string: 1, fretOffset: 2,  intervalName: "ルート" },
+  ],
+  "7": [
+    { string: 3, fretOffset: 0,  intervalName: "ルート" },
+    { string: 2, fretOffset: 2,  intervalName: "5th"   },
+    { string: 2, fretOffset: -3, intervalName: "3rd"   },
+    { string: 1, fretOffset: 0,  intervalName: "♭7th"  },
+  ],
+  "m7": [
+    { string: 3, fretOffset: 0,  intervalName: "ルート" },
+    { string: 2, fretOffset: 2,  intervalName: "5th"   },
+    { string: 2, fretOffset: -4, intervalName: "♭3rd"  },
+    { string: 1, fretOffset: 0,  intervalName: "♭7th"  },
+  ],
+  "maj7": [
+    { string: 3, fretOffset: 0,  intervalName: "ルート" },
+    { string: 2, fretOffset: 2,  intervalName: "5th"   },
+    { string: 2, fretOffset: -3, intervalName: "3rd"   },
+    { string: 1, fretOffset: 1,  intervalName: "maj7th"},
+  ],
+  "dim": [
+    { string: 3, fretOffset: 0,  intervalName: "ルート" },
+    { string: 2, fretOffset: 1,  intervalName: "♭5th"  },
+    { string: 2, fretOffset: -4, intervalName: "♭3rd"  },
+  ],
+};
+
+/**
+ * ルートノートとクオリティから、全構成音ポジションを生成する
+ */
+function buildAllPositions(root: string, quality: string): BassPosition[] {
+  const rootCandidates = BASS_POSITIONS[root] ?? [];
+  const rootPos = rootCandidates.find(p => p.string === 3) ?? rootCandidates[0];
+  if (!rootPos) return [];
+
+  const template = SHAPE_TEMPLATES[quality] ?? SHAPE_TEMPLATES[""];
+
+  return template
+    .map(t => ({
+      string: t.string,
+      fret: rootPos.fret + t.fretOffset,
+      intervalName: t.intervalName,
+    }))
+    .filter(p => p.fret >= 0 && p.fret <= 24) as BassPosition[];
+}
+
 function getSafeNotes(root: string, quality: string): string[] {
   const rootIdx = NOTES.indexOf(root);
   if (rootIdx === -1) return [root];
@@ -136,7 +197,7 @@ function getSafeNotes(root: string, quality: string): string[] {
 export function getChordDetail(token: ChordToken): ChordDetail {
   const root = token.bass ?? token.root;
   const safeNotes = getSafeNotes(token.root, token.quality);
-  const positions = BASS_POSITIONS[root] ?? BASS_POSITIONS[token.root] ?? [];
+  const positions = buildAllPositions(token.root, token.quality);
 
   const rootIdx = NOTES.indexOf(token.root);
   const intervals = CHORD_TONES[token.quality] ?? CHORD_TONES[""] ?? [0, 4, 7];

@@ -59,6 +59,7 @@ export type BassPosition = {
   string: 1 | 2 | 3 | 4;
   fret: number;
   finger?: number;
+  intervalName?: string;  // 例: "ルート", "5th", "♭3rd" など
 };
 
 export type NoteRole = {
