@@ -1,16 +1,13 @@
 // src/lib/phraseData.ts
+// ⚠️ このファイルを丸ごと以下の内容に置き換えること
 
 export type PhraseDifficulty = "easy" | "mid";
 export type PhraseCategory = "root" | "walking" | "chord-tone";
 
-// タブ譜の1イベント: どの弦の何度数オフセットを弾くか
-// string: 1=G, 2=D, 3=A, 4=E
-// semitoneOffset: ルート音からの半音数（0=ルート, 3=♭3rd, 4=3rd, 7=5th, 10=♭7th ...）
-// beat: 16分音符での位置（0始まり、1小節=16）
 export type NoteEvent = {
-  string: 1 | 2 | 3 | 4;
-  semitoneOffset: number;
-  beat: number;
+  string: 1 | 2 | 3 | 4; // 1=G弦, 2=D弦, 3=A弦, 4=E弦
+  semitoneOffset: number; // ルートからの半音数（0=ルート, 3=♭3rd, 4=3rd, 7=5th...）
+  beat: number;           // 16分音符の位置（0始まり、1小節=16）
 };
 
 export interface Phrase {
@@ -27,18 +24,23 @@ export interface PhraseSet {
   "chord-tone": Phrase[];
 }
 
-// ── 音程計算ユーティリティ ────────────────────────────────
+// ── 音程計算 ──────────────────────────────────────────────
 
 const NOTE_SEMITONES: Record<string, number> = {
   "C": 0, "C#": 1, "D": 2, "D#": 3, "E": 4, "F": 5,
   "F#": 6, "G": 7, "G#": 8, "A": 9, "A#": 10, "B": 11,
 };
 
+// C=0基準の各弦開放音
 const OPEN_STRINGS: Record<1 | 2 | 3 | 4, number> = {
-  4: 4,  // E
-  3: 9,  // A
-  2: 2,  // D (14%12=2)
-  1: 7,  // G (19%12=7)
+  4: 4,  // E弦
+  3: 9,  // A弦
+  2: 2,  // D弦 (14%12)
+  1: 7,  // G弦 (19%12)
+};
+
+const STRING_NAMES: Record<1 | 2 | 3 | 4, string> = {
+  1: "G", 2: "D", 3: "A", 4: "E",
 };
 
 function noteToFret(stringNum: 1 | 2 | 3 | 4, noteSemitone: number): number {
@@ -46,12 +48,9 @@ function noteToFret(stringNum: 1 | 2 | 3 | 4, noteSemitone: number): number {
   return ((noteSemitone - open) % 12 + 12) % 12;
 }
 
-const STRING_NAMES: Record<1 | 2 | 3 | 4, string> = {
-  1: "G", 2: "D", 3: "A", 4: "E",
-};
-
 /**
  * パターンとルート音名からタブ譜文字列を生成する
+ * 1beat = 1文字。2桁フレットは1の位のみ表示。
  */
 export function generateTab(pattern: NoteEvent[], rootNote: string, beats = 16): string {
   const rootSemitone = NOTE_SEMITONES[rootNote] ?? 9;
@@ -65,24 +64,46 @@ export function generateTab(pattern: NoteEvent[], rootNote: string, beats = 16):
       eventMap.set(ev.beat, noteToFret(str, noteSemitone));
     }
 
-    // 1beat = 1文字。2桁フレット（10f以上）は1の位のみ表示
     let line = "";
     for (let i = 0; i < beats; i++) {
       if (eventMap.has(i)) {
-        const fret = eventMap.get(i)!;
-        line += String(fret % 10);
+        line += String(eventMap.get(i)! % 10); // 2桁は1の位のみ
       } else {
         line += "-";
       }
     }
 
-    const label = STRING_NAMES[str];
-    return `${label}|${line}|`;
+    return `${STRING_NAMES[str]}|${line}|`;
   }).join("\n");
 }
 
+/**
+ * コード名からルート音名を取得する
+ */
+export function getRootNote(chordName: string): string {
+  const aliases: Record<string, string> = {
+    "Db": "C#", "Eb": "D#", "Fb": "E", "Gb": "F#",
+    "Ab": "G#", "Bb": "A#", "Cb": "B",
+  };
+  const match = chordName.match(/^([A-G][b#]?)/);
+  if (!match) return "A";
+  return aliases[match[1]] ?? match[1];
+}
+
+/**
+ * コード名からクオリティキーを取得する
+ */
+export function getQualityKey(chordName: string): string {
+  if (/m7b5|dim7|dim/.test(chordName)) return "dim";
+  if (/aug/.test(chordName)) return "aug";
+  if (/mM7|m7/.test(chordName)) return "m7";
+  if (/M7|maj7/.test(chordName)) return "M7";
+  if (/m/.test(chordName)) return "m";
+  if (/7/.test(chordName)) return "7";
+  return "M";
+}
+
 // ── フレーズデータ ────────────────────────────────────────
-// beat は16分音符位置（0=1拍目頭, 4=2拍目頭, 8=3拍目頭, 12=4拍目頭）
 
 export const phraseData: Record<string, PhraseSet> = {
   // ── マイナー ──────────────────────────────────────────
@@ -117,10 +138,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "クロマチックアプローチ",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0,  beat: 2 },
-          { string: 2, semitoneOffset: 7,  beat: 6 },
-          { string: 2, semitoneOffset: 6,  beat: 10 },
-          { string: 2, semitoneOffset: 5,  beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 2 },
+          { string: 2, semitoneOffset: 7, beat: 6 },
+          { string: 2, semitoneOffset: 6, beat: 10 },
+          { string: 2, semitoneOffset: 5, beat: 14 },
         ],
         beats: 16,
         tip: "次のコードのルートへ半音で近づくウォーキングライン。",
@@ -162,10 +183,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "スケールウォーク",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0,  beat: 2 },
-          { string: 3, semitoneOffset: 2,  beat: 6 },
-          { string: 2, semitoneOffset: 7,  beat: 10 },
-          { string: 2, semitoneOffset: 9,  beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 2 },
+          { string: 3, semitoneOffset: 2, beat: 6 },
+          { string: 2, semitoneOffset: 7, beat: 10 },
+          { string: 2, semitoneOffset: 9, beat: 14 },
         ],
         beats: 16,
         tip: "メジャースケールの音を使ってスムーズに次へつなぐ。",
@@ -397,31 +418,3 @@ export const phraseData: Record<string, PhraseSet> = {
     ],
   },
 };
-
-/**
- * コード名からクオリティキーを取得する
- */
-export function getQualityKey(chordName: string): string {
-  if (/m7b5|dim7|dim/.test(chordName)) return "dim";
-  if (/aug/.test(chordName)) return "aug";
-  if (/mM7|m7/.test(chordName)) return "m7";
-  if (/M7|maj7/.test(chordName)) return "M7";
-  if (/m/.test(chordName)) return "m";
-  if (/7/.test(chordName)) return "7";
-  return "M";
-}
-
-/**
- * コード名からルート音名を取得する
- * 例: 'Am' → 'A', 'C#m7' → 'C#', 'Bb7' → 'A#'
- */
-export function getRootNote(chordName: string): string {
-  const aliases: Record<string, string> = {
-    "Db": "C#", "Eb": "D#", "Fb": "E", "Gb": "F#",
-    "Ab": "G#", "Bb": "A#", "Cb": "B",
-  };
-  const match = chordName.match(/^([A-G][b#]?)/);
-  if (!match) return "A";
-  const raw = match[1];
-  return aliases[raw] ?? raw;
-}

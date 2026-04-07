@@ -6,18 +6,18 @@ import { getDegreeFunction } from "../lib/degreeAnalyzer";
 import PhraseScreen from "./PhraseScreen";
 
 const INTERVAL_SHORT: Record<string, string> = {
-  "ルート":  "R",
-  "3rd":     "3",
-  "♭3rd":   "♭3",
-  "5th":     "5",
-  "♭5th":   "♭5",
-  "7th":     "7",
-  "maj7th":  "M7",
-  "♭7th":   "♭7",
-  "9th":     "9",
-  "4th":     "4",
-  "6th":     "6",
-  "2nd":     "2",
+  "ルート": "R",
+  "3rd":   "3",
+  "♭3rd": "♭3",
+  "5th":   "5",
+  "♭5th": "♭5",
+  "7th":   "7",
+  "maj7th":"M7",
+  "♭7th": "♭7",
+  "9th":   "9",
+  "4th":   "4",
+  "6th":   "6",
+  "2nd":   "2",
 };
 
 type Props = {
@@ -26,10 +26,13 @@ type Props = {
   onClose: () => void;
 };
 
-// 弦ラベル
-const STRING_NAMES: Record<1|2|3|4, string> = { 1: "G", 2: "D", 3: "A", 4: "E" };
+// 弦番号 → ラベル（1=G弦, 2=D弦, 3=A弦, 4=E弦）
+const STRING_NAMES: Record<number, string> = {
+  1: "G", 2: "D", 3: "A", 4: "E",
+};
 
-// intervalName → ドット色
+// ── PositionDiagram (SVG版) ──────────────────────────────
+
 const DEGREE_COLOR: Record<string, string> = {
   "ルート":  "#E5B800",
   "5th":    "#4A90D9",
@@ -50,7 +53,7 @@ function PositionDiagram({
   positions,
 }: {
   positions: BassPosition[];
-  noteRoles: NoteRole[];
+  noteRoles: NoteRole[]; // 互換維持のため残す（使用しない）
 }) {
   if (!positions || positions.length === 0) return null;
 
@@ -63,15 +66,17 @@ function PositionDiagram({
   const PAD_TOP  = 8;
   const FRET_W   = 52;
   const STR_GAP  = 18;
-  const STRINGS: Array<1|2|3|4> = [4, 3, 2, 1];
+  // 上からG→D→A→E（ベースの一般的な表記: 細い弦が上）
+  const STRINGS: Array<1|2|3|4> = [1, 2, 3, 4];
 
   const svgW = PAD_LEFT + displayCount * FRET_W + 12;
   const svgH = PAD_TOP + 3 * STR_GAP + 22;
 
+  // 弦番号 → y座標（1=G弦が上=小さいy、4=E弦が下=大きいy）
+  const strToY  = (s: number) => PAD_TOP + (s - 1) * STR_GAP;
   const fretToX = (f: number) => PAD_LEFT + (f - minFret + 0.5) * FRET_W;
-  const strToY  = (s: number) => PAD_TOP  + (4 - s) * STR_GAP;
 
-  // シェイプ破線計算
+  // シェイプ破線
   const roots  = positions.filter(p => p.intervalName === "ルート");
   const fifths = positions.filter(p => p.intervalName === "5th");
   const shapeLines: ShapeLine[] = [];
@@ -83,15 +88,15 @@ function PositionDiagram({
       color: "#E5B800",
     });
   }
-  const lowestRoot = roots.length > 0
-    ? roots.reduce((a, b) => (a.string > b.string ? a : b), roots[0])
+  const highestRoot = roots.length > 0
+    ? roots.reduce((a, b) => (a.string < b.string ? a : b), roots[0])
     : null;
-  if (lowestRoot && fifths.length > 0) {
+  if (highestRoot && fifths.length > 0) {
     const nearestFifth = fifths.reduce((a, b) =>
-      Math.abs(a.string - lowestRoot.string) <= Math.abs(b.string - lowestRoot.string) ? a : b
+      Math.abs(a.string - highestRoot.string) <= Math.abs(b.string - highestRoot.string) ? a : b
     );
     shapeLines.push({
-      x1: fretToX(lowestRoot.fret),   y1: strToY(lowestRoot.string),
+      x1: fretToX(highestRoot.fret),  y1: strToY(highestRoot.string),
       x2: fretToX(nearestFifth.fret), y2: strToY(nearestFifth.string),
       color: "#4A90D9",
     });
@@ -103,14 +108,14 @@ function PositionDiagram({
       style={{ width: "100%", display: "block" }}
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* 弦 */}
+      {/* 弦（上=G, 下=E） */}
       {STRINGS.map((s, i) => (
         <line
           key={s}
           x1={PAD_LEFT} y1={strToY(s)}
           x2={svgW - 8} y2={strToY(s)}
           stroke="#3a3a3a"
-          strokeWidth={1.5 - i * 0.2}
+          strokeWidth={0.8 + i * 0.2}
         />
       ))}
 
@@ -121,13 +126,13 @@ function PositionDiagram({
           x1={PAD_LEFT + (f - minFret) * FRET_W}
           y1={PAD_TOP - 4}
           x2={PAD_LEFT + (f - minFret) * FRET_W}
-          y2={strToY(1) + 4}
+          y2={strToY(4) + 4}
           stroke={f === minFret ? "#666" : "#333"}
           strokeWidth={f === minFret ? 1.8 : 0.8}
         />
       ))}
 
-      {/* フレット番号ラベル */}
+      {/* フレット番号 */}
       {Array.from({ length: displayCount }, (_, i) => minFret + i).map(f => (
         <text
           key={f}
@@ -141,7 +146,7 @@ function PositionDiagram({
         </text>
       ))}
 
-      {/* 弦ラベル（G/D/A/E） */}
+      {/* 弦ラベル */}
       {STRINGS.map(s => (
         <text
           key={s}
@@ -155,12 +160,11 @@ function PositionDiagram({
         </text>
       ))}
 
-      {/* シェイプ破線（ドットより前＝背面に描画） */}
+      {/* シェイプ破線（ドットの背面） */}
       {shapeLines.map((l, i) => (
         <line
           key={i}
-          x1={l.x1} y1={l.y1}
-          x2={l.x2} y2={l.y2}
+          x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2}
           stroke={l.color}
           strokeWidth="1"
           strokeDasharray="3,2"
@@ -173,7 +177,7 @@ function PositionDiagram({
         const cx = fretToX(pos.fret);
         const cy = strToY(pos.string);
         const iname = pos.intervalName ?? "ルート";
-        const fill = DEGREE_COLOR[iname] ?? "#666";
+        const fill  = DEGREE_COLOR[iname] ?? "#666";
         const textFill = DARK_TEXT_DEGREES.has(iname) ? "#12141A" : "#ffffff";
         const label = INTERVAL_SHORT[iname] ?? iname;
         return (
@@ -195,16 +199,18 @@ function PositionDiagram({
   );
 }
 
+// ── ChordModal 本体 ──────────────────────────────────────
+
 export default function ChordModal({ detail, degree, onClose }: Props) {
   const [showPhraseScreen, setShowPhraseScreen] = useState(false);
 
-  // 度数機能からロールラベルとスタイルを決定
   const degreeFunc = getDegreeFunction(degree);
   const roleLabel =
-    degreeFunc === "tonic" ? "トニック" :
-    degreeFunc === "dominant" ? "ドミナント" :
+    degreeFunc === "tonic"       ? "トニック" :
+    degreeFunc === "dominant"    ? "ドミナント" :
     degreeFunc === "subdominant" ? "サブドミナント" :
     degree ? "ノンダイアトニック" : "";
+
   const roleStyle =
     degreeFunc === "tonic"
       ? "bg-yellow-900/20 text-yellow-400 border-yellow-800/40" :
@@ -216,7 +222,6 @@ export default function ChordModal({ detail, degree, onClose }: Props) {
       ? "bg-gray-800/60 text-gray-500 border-gray-700/40"
       : "";
 
-  // ボトムシート共通ラッパー
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <div
       className="fixed inset-0 z-20 bg-black/60"
@@ -227,14 +232,12 @@ export default function ChordModal({ detail, degree, onClose }: Props) {
         style={{ maxHeight: "85vh" }}
         onClick={e => e.stopPropagation()}
       >
-        {/* ドラッグハンドル */}
         <div className="w-9 h-1 bg-gray-700 rounded-full mx-auto mt-2.5 mb-1" />
         {children}
       </div>
     </div>
   );
 
-  // フレーズ画面
   if (showPhraseScreen) {
     return (
       <Wrapper>
@@ -251,6 +254,7 @@ export default function ChordModal({ detail, degree, onClose }: Props) {
   return (
     <Wrapper>
       <div className="overflow-y-auto" style={{ maxHeight: "calc(85vh - 20px)" }}>
+
         {/* ヘッダー */}
         <div className="flex items-baseline justify-between px-4 pb-3 pt-1 border-b border-gray-800">
           <div className="flex items-baseline gap-2.5">
@@ -268,10 +272,7 @@ export default function ChordModal({ detail, degree, onClose }: Props) {
               </span>
             )}
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-600 text-lg leading-none"
-          >
+          <button onClick={onClose} className="text-gray-600 text-lg leading-none">
             ×
           </button>
         </div>
@@ -301,7 +302,7 @@ export default function ChordModal({ detail, degree, onClose }: Props) {
           <PositionDiagram positions={detail.positions} noteRoles={detail.noteRoles} />
         </div>
 
-        {/* アドバイス（デフォルト以外のみ） */}
+        {/* アドバイス */}
         {detail.advice !== "ルート中心でOK" && (
           <div className="mx-4 mb-3 bg-gray-800 rounded p-3 text-green-400 text-sm font-bold">
             🎸 {detail.advice}
@@ -325,6 +326,7 @@ export default function ChordModal({ detail, degree, onClose }: Props) {
             <span className="text-gray-500 text-lg">›</span>
           </button>
         </div>
+
       </div>
     </Wrapper>
   );
