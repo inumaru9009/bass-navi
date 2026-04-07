@@ -111,43 +111,49 @@ function buildAllPositions(root: string, quality: string): BassPosition[] {
     intervalName: iv.intervalName,
   }));
 
-  const rootFretOnA = ((rootSemitone - OPEN_STRINGS[3]) % 12 + 12) % 12;
-  const WINDOW = 5;
   const priority = ["ルート", "5th", "♭3rd", "3rd", "♭7th", "maj7th", "4th", "♭5th", "6th", "♭6th", "2nd"];
+  const WINDOW = 5;
   const strings: Array<1|2|3|4> = [4, 3, 2, 1];
   const positions: BassPosition[] = [];
   let rootUsedCount = 0;
 
   for (const str of strings) {
     const open = OPEN_STRINGS[str];
-    const candidates: { semitone: number; intervalName: string; fret: number }[] = [];
+    // 各弦でのルートフレット（0〜11f）をウィンドウ基準にする
+    const rootFretOnStr = ((rootSemitone - open) % 12 + 12) % 12;
 
+    // octave=0 の候補（低フレット優先）
+    const candsLow: { semitone: number; intervalName: string; fret: number }[] = [];
+    // octave=12 のフォールバック候補
+    const candsHigh: { semitone: number; intervalName: string; fret: number }[] = [];
     for (const tone of toneSet) {
       const baseFret = ((tone.semitone - open) % 12 + 12) % 12;
-      for (const octave of [0, 12]) {
-        const fret = baseFret + octave;
-        if (fret <= 17) candidates.push({ ...tone, fret });
-      }
+      candsLow.push({ ...tone, fret: baseFret });
+      if (baseFret + 12 <= 17) candsHigh.push({ ...tone, fret: baseFret + 12 });
     }
 
-    if (candidates.length === 0) continue;
+    type Cand = { semitone: number; intervalName: string; fret: number };
+    // ルート使用済み2弦以上ならルート以外を優先
+    const filterRoot = (arr: Cand[]): Cand[] =>
+      rootUsedCount >= 2 ? arr.filter(c => c.intervalName !== "ルート") : arr;
+    const filterWindow = (arr: Cand[]): Cand[] =>
+      arr.filter(c => Math.abs(c.fret - rootFretOnStr) <= WINDOW);
 
-    const inWindow = candidates.filter(c => Math.abs(c.fret - rootFretOnA) <= WINDOW);
-    const pool = inWindow.length > 0 ? inWindow : candidates;
+    // 優先順位: octave=0 ウィンドウ内 → octave=12 ウィンドウ内 → octave=0 全体 → 全候補
+    let pool = filterWindow(filterRoot(candsLow));
+    if (pool.length === 0) pool = filterWindow(filterRoot(candsHigh));
+    if (pool.length === 0) pool = filterRoot(candsLow);
+    if (pool.length === 0) pool = [...candsLow, ...candsHigh];
 
-    // ルートが2弦以上で使われていたらD弦・G弦はルート以外を優先
-    const nonRoot = pool.filter(c => c.intervalName !== "ルート");
-    const adjustedPool = (rootUsedCount >= 2 && nonRoot.length > 0) ? nonRoot : pool;
-
-    adjustedPool.sort((a, b) => {
+    pool.sort((a, b) => {
       const pa = priority.indexOf(a.intervalName);
       const pb = priority.indexOf(b.intervalName);
       const pd = (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb);
       if (pd !== 0) return pd;
-      return Math.abs(a.fret - rootFretOnA) - Math.abs(b.fret - rootFretOnA);
+      return Math.abs(a.fret - rootFretOnStr) - Math.abs(b.fret - rootFretOnStr);
     });
 
-    const chosen = adjustedPool[0];
+    const chosen = pool[0];
     if (chosen.intervalName === "ルート") rootUsedCount++;
     positions.push({ string: str, fret: chosen.fret, intervalName: chosen.intervalName });
   }
