@@ -60,7 +60,7 @@ function PositionDiagram({
   const allFrets = positions.map(p => p.fret);
   const minFret = Math.max(0, Math.min(...allFrets) - 1);
   const maxFret = Math.max(...allFrets);
-  const displayCount = Math.max(maxFret - minFret + 3, 4);
+  const displayCount = Math.min(Math.max(maxFret - minFret + 3, 4), 6);
 
   const PAD_LEFT = 24;
   const PAD_TOP  = 8;

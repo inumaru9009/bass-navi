@@ -1,5 +1,4 @@
 // src/lib/phraseData.ts
-// ⚠️ このファイルを丸ごと以下の内容に置き換えること
 
 export type PhraseDifficulty = "easy" | "mid";
 export type PhraseCategory = "root" | "walking" | "chord-tone";
@@ -7,7 +6,7 @@ export type PhraseCategory = "root" | "walking" | "chord-tone";
 export type NoteEvent = {
   string: 1 | 2 | 3 | 4; // 1=G弦, 2=D弦, 3=A弦, 4=E弦
   semitoneOffset: number; // ルートからの半音数（0=ルート, 3=♭3rd, 4=3rd, 7=5th...）
-  beat: number;           // 16分音符の位置（0始まり、1小節=16）
+  beat: number;           // 16分音符の位置（1始まり: 1=1拍目頭, 5=2拍目頭, 9=3拍目頭, 13=4拍目頭）
 };
 
 export interface Phrase {
@@ -50,6 +49,7 @@ function noteToFret(stringNum: 1 | 2 | 3 | 4, noteSemitone: number): number {
 
 /**
  * パターンとルート音名からタブ譜文字列を生成する
+ * beat は1始まり（beat=1 が最初の16分音符）
  * 1beat = 1文字。2桁フレットは1の位のみ表示。
  */
 export function generateTab(pattern: NoteEvent[], rootNote: string, beats = 16): string {
@@ -65,7 +65,7 @@ export function generateTab(pattern: NoteEvent[], rootNote: string, beats = 16):
     }
 
     let line = "";
-    for (let i = 0; i < beats; i++) {
+    for (let i = 1; i <= beats; i++) {
       if (eventMap.has(i)) {
         line += String(eventMap.get(i)! % 10); // 2桁は1の位のみ
       } else {
@@ -104,6 +104,8 @@ export function getQualityKey(chordName: string): string {
 }
 
 // ── フレーズデータ ────────────────────────────────────────
+// beat は1始まりの16分音符位置
+// 1=1拍目頭, 5=2拍目頭, 9=3拍目頭, 13=4拍目頭
 
 export const phraseData: Record<string, PhraseSet> = {
   // ── マイナー ──────────────────────────────────────────
@@ -113,10 +115,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "シンプルルート",
         difficulty: "easy",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 0, beat: 6 },
-          { string: 3, semitoneOffset: 0, beat: 10 },
-          { string: 3, semitoneOffset: 0, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 0, beat: 5 },
+          { string: 3, semitoneOffset: 0, beat: 9 },
+          { string: 3, semitoneOffset: 0, beat: 13 },
         ],
         beats: 16,
         tip: "ルート音だけを安定して刻む基本形。まずここから。",
@@ -125,9 +127,9 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "オクターブ上下",
         difficulty: "easy",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 2, semitoneOffset: 0, beat: 8 },
-          { string: 3, semitoneOffset: 0, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 2, semitoneOffset: 0, beat: 7 },
+          { string: 3, semitoneOffset: 0, beat: 13 },
         ],
         beats: 16,
         tip: "同じルートをオクターブで行き来するパターン。",
@@ -138,10 +140,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "クロマチックアプローチ",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 2, semitoneOffset: 7, beat: 6 },
-          { string: 2, semitoneOffset: 6, beat: 10 },
-          { string: 2, semitoneOffset: 5, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 2, semitoneOffset: 7, beat: 5 },
+          { string: 2, semitoneOffset: 6, beat: 9 },
+          { string: 2, semitoneOffset: 5, beat: 13 },
         ],
         beats: 16,
         tip: "次のコードのルートへ半音で近づくウォーキングライン。",
@@ -152,9 +154,9 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "1→♭3→5 アルペジオ",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 3, beat: 6 },
-          { string: 2, semitoneOffset: 7, beat: 10 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 3, beat: 5 },
+          { string: 2, semitoneOffset: 7, beat: 9 },
         ],
         beats: 16,
         tip: "コードトーン(1,♭3,5)を順番に弾くシンプルなアルペジオ。",
@@ -169,10 +171,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "シンプルルート",
         difficulty: "easy",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 0, beat: 6 },
-          { string: 3, semitoneOffset: 0, beat: 10 },
-          { string: 3, semitoneOffset: 0, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 0, beat: 5 },
+          { string: 3, semitoneOffset: 0, beat: 9 },
+          { string: 3, semitoneOffset: 0, beat: 13 },
         ],
         beats: 16,
         tip: "まずルートを安定して刻む練習。",
@@ -183,10 +185,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "スケールウォーク",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 2, beat: 6 },
-          { string: 2, semitoneOffset: 7, beat: 10 },
-          { string: 2, semitoneOffset: 9, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 2, beat: 5 },
+          { string: 2, semitoneOffset: 7, beat: 9 },
+          { string: 2, semitoneOffset: 9, beat: 13 },
         ],
         beats: 16,
         tip: "メジャースケールの音を使ってスムーズに次へつなぐ。",
@@ -197,9 +199,9 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "1→3→5 アルペジオ",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 4, beat: 6 },
-          { string: 2, semitoneOffset: 7, beat: 10 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 4, beat: 5 },
+          { string: 2, semitoneOffset: 7, beat: 9 },
         ],
         beats: 16,
         tip: "メジャーコードのコードトーン(1,3,5)を順に弾く。",
@@ -214,10 +216,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "シンプルルート",
         difficulty: "easy",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 0, beat: 6 },
-          { string: 3, semitoneOffset: 0, beat: 10 },
-          { string: 3, semitoneOffset: 0, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 0, beat: 5 },
+          { string: 3, semitoneOffset: 0, beat: 9 },
+          { string: 3, semitoneOffset: 0, beat: 13 },
         ],
         beats: 16,
         tip: "ドミナント7thはルートを中心にシンプルに。",
@@ -228,10 +230,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "♭7thを経由するライン",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0,  beat: 2 },
-          { string: 3, semitoneOffset: 10, beat: 6 },
-          { string: 3, semitoneOffset: 9,  beat: 10 },
-          { string: 3, semitoneOffset: 8,  beat: 14 },
+          { string: 3, semitoneOffset: 0,  beat: 1 },
+          { string: 3, semitoneOffset: 10, beat: 5 },
+          { string: 3, semitoneOffset: 9,  beat: 9 },
+          { string: 3, semitoneOffset: 8,  beat: 13 },
         ],
         beats: 16,
         tip: "♭7thを経由して次のコードへ半音でつなぐ。",
@@ -242,10 +244,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "1→3→5→♭7 アルペジオ",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0,  beat: 2 },
-          { string: 3, semitoneOffset: 4,  beat: 6 },
-          { string: 2, semitoneOffset: 7,  beat: 10 },
-          { string: 2, semitoneOffset: 10, beat: 14 },
+          { string: 3, semitoneOffset: 0,  beat: 1 },
+          { string: 3, semitoneOffset: 4,  beat: 5 },
+          { string: 2, semitoneOffset: 7,  beat: 9 },
+          { string: 2, semitoneOffset: 10, beat: 13 },
         ],
         beats: 16,
         tip: "4音のコードトーンをすべて使ったアルペジオ。",
@@ -260,10 +262,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "シンプルルート",
         difficulty: "easy",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 0, beat: 6 },
-          { string: 3, semitoneOffset: 0, beat: 10 },
-          { string: 3, semitoneOffset: 0, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 0, beat: 5 },
+          { string: 3, semitoneOffset: 0, beat: 9 },
+          { string: 3, semitoneOffset: 0, beat: 13 },
         ],
         beats: 16,
         tip: "マイナー7thはルートを落ち着かせて。",
@@ -274,10 +276,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "クロマチックアプローチ",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 2, semitoneOffset: 7, beat: 6 },
-          { string: 2, semitoneOffset: 6, beat: 10 },
-          { string: 2, semitoneOffset: 5, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 2, semitoneOffset: 7, beat: 5 },
+          { string: 2, semitoneOffset: 6, beat: 9 },
+          { string: 2, semitoneOffset: 5, beat: 13 },
         ],
         beats: 16,
         tip: "半音で近づくウォーキングライン。",
@@ -288,10 +290,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "1→♭3→5→♭7",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0,  beat: 2 },
-          { string: 3, semitoneOffset: 3,  beat: 6 },
-          { string: 2, semitoneOffset: 7,  beat: 10 },
-          { string: 2, semitoneOffset: 10, beat: 14 },
+          { string: 3, semitoneOffset: 0,  beat: 1 },
+          { string: 3, semitoneOffset: 3,  beat: 5 },
+          { string: 2, semitoneOffset: 7,  beat: 9 },
+          { string: 2, semitoneOffset: 10, beat: 13 },
         ],
         beats: 16,
         tip: "m7のコードトーン4音を順に弾く。",
@@ -306,10 +308,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "シンプルルート",
         difficulty: "easy",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 0, beat: 6 },
-          { string: 3, semitoneOffset: 0, beat: 10 },
-          { string: 3, semitoneOffset: 0, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 0, beat: 5 },
+          { string: 3, semitoneOffset: 0, beat: 9 },
+          { string: 3, semitoneOffset: 0, beat: 13 },
         ],
         beats: 16,
         tip: "maj7はルートをゆったり持続させるのが効果的。",
@@ -320,10 +322,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "スケールウォーク",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 2, beat: 6 },
-          { string: 2, semitoneOffset: 7, beat: 10 },
-          { string: 2, semitoneOffset: 9, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 2, beat: 5 },
+          { string: 2, semitoneOffset: 7, beat: 9 },
+          { string: 2, semitoneOffset: 9, beat: 13 },
         ],
         beats: 16,
         tip: "maj7スケールをなめらかに歩く。",
@@ -334,10 +336,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "1→3→5→M7",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0,  beat: 2 },
-          { string: 3, semitoneOffset: 4,  beat: 6 },
-          { string: 2, semitoneOffset: 7,  beat: 10 },
-          { string: 2, semitoneOffset: 11, beat: 14 },
+          { string: 3, semitoneOffset: 0,  beat: 1 },
+          { string: 3, semitoneOffset: 4,  beat: 5 },
+          { string: 2, semitoneOffset: 7,  beat: 9 },
+          { string: 2, semitoneOffset: 11, beat: 13 },
         ],
         beats: 16,
         tip: "メジャー7thのコードトーン。M7が美しい響き。",
@@ -352,8 +354,8 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "ルートを短く",
         difficulty: "easy",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 0, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 0, beat: 13 },
         ],
         beats: 16,
         tip: "dimは不安定。ルートを短めに弾いて次へ。",
@@ -364,10 +366,10 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "半音下降ライン",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0,  beat: 2 },
-          { string: 3, semitoneOffset: 11, beat: 6 },
-          { string: 3, semitoneOffset: 10, beat: 10 },
-          { string: 3, semitoneOffset: 9,  beat: 14 },
+          { string: 3, semitoneOffset: 0,  beat: 1 },
+          { string: 3, semitoneOffset: 11, beat: 5 },
+          { string: 3, semitoneOffset: 10, beat: 9 },
+          { string: 3, semitoneOffset: 9,  beat: 13 },
         ],
         beats: 16,
         tip: "半音で下降して緊張感を演出する。",
@@ -378,9 +380,9 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "1→♭3→♭5",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 3, beat: 6 },
-          { string: 2, semitoneOffset: 6, beat: 10 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 3, beat: 5 },
+          { string: 2, semitoneOffset: 6, beat: 9 },
         ],
         beats: 16,
         tip: "dimのコードトーン。♭5が特徴的な緊張感。",
@@ -395,8 +397,8 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "ルートを短く",
         difficulty: "easy",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 0, beat: 14 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 0, beat: 13 },
         ],
         beats: 16,
         tip: "augも不安定。ルートを短めに弾いて次へ。",
@@ -408,9 +410,9 @@ export const phraseData: Record<string, PhraseSet> = {
         name: "1→3→#5",
         difficulty: "mid",
         pattern: [
-          { string: 3, semitoneOffset: 0, beat: 2 },
-          { string: 3, semitoneOffset: 4, beat: 6 },
-          { string: 2, semitoneOffset: 8, beat: 10 },
+          { string: 3, semitoneOffset: 0, beat: 1 },
+          { string: 3, semitoneOffset: 4, beat: 5 },
+          { string: 2, semitoneOffset: 8, beat: 9 },
         ],
         beats: 16,
         tip: "augのコードトーン。#5の浮遊感を活かす。",

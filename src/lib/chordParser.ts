@@ -139,8 +139,8 @@ const SHAPE_TEMPLATES: Record<string, RelPos[]> = {
   "m": [
     { string: 3, fretOffset: 0,  intervalName: "ルート" },
     { string: 2, fretOffset: 2,  intervalName: "5th"   },
-    { string: 2, fretOffset: -4, intervalName: "♭3rd"  },
-    { string: 1, fretOffset: 2,  intervalName: "ルート" },
+    { string: 2, fretOffset: -2, intervalName: "♭3rd"  },
+    { string: 1, fretOffset: 5,  intervalName: "♭3rd"  },
   ],
   "7": [
     { string: 3, fretOffset: 0,  intervalName: "ルート" },
