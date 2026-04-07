@@ -158,6 +158,13 @@ function buildAllPositions(root: string, quality: string): BassPosition[] {
     positions.push({ string: str, fret: chosen.fret, intervalName: chosen.intervalName });
   }
 
+  // ルートが複数弦にある場合、最低フレットのルート1つだけ残す
+  const rootPositions = positions.filter(p => p.intervalName === "ルート");
+  if (rootPositions.length > 1) {
+    const lowestFretRoot = rootPositions.sort((a, b) => a.fret - b.fret)[0];
+    return positions.filter(p => p.intervalName !== "ルート" || p.fret === lowestFretRoot.fret);
+  }
+
   return positions;
 }
 
