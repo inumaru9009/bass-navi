@@ -24,7 +24,8 @@ async function extractScore() {
       const cols = chord.querySelectorAll(".mejiowvnz .col");
       const lyricText = Array.from(cols)
         .map(col => col.textContent)
-        .join("").replace(/([a-zA-Z])\s*([a-zA-Z])/g, '$1 $2').trim();
+        .map(t => t === '' ? ' ' : t)
+        .join('').replace(/\s+/g, ' ').trim();
 
       chords.push(rt ? rt.textContent.trim() : "");
       lyrics.push(lyricText);
