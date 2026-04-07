@@ -32,7 +32,15 @@ async function extractScore() {
     });
 
     const chordLine = chords.filter(c => c).join("  ");
-    const lyricLine = lyrics.join("");
+    const lyricLine = lyrics.reduce(function(acc, lyric) {
+      if (!acc) return lyric;
+      const lastChar = acc[acc.length - 1];
+      const firstChar = lyric[0];
+      if (/[a-zA-Z!?,'.]/.test(lastChar) && /[a-zA-Z(]/.test(firstChar)) {
+        return acc + ' ' + lyric;
+      }
+      return acc + lyric;
+    }, '');
 
     if (chordLine) lines.push(chordLine);
     if (lyricLine.trim()) lines.push(lyricLine);
