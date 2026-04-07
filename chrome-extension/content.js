@@ -20,14 +20,17 @@ async function extractScore() {
 
     row.querySelectorAll(".chord").forEach(chord => {
       const rt = chord.querySelector("rt");
-      // 複数の.colを全部結合
-      const cols = chord.querySelectorAll(".mejiowvnz .col");
-      const lyricText = Array.from(cols)
-        .map(col => col.textContent)
-        .map(t => t === '' ? ' ' : t)
-        .join('').replace(/\s+/g, ' ').trim();
+      const rtText = rt ? rt.innerText.trim() : "";
+      // innerText でブラウザ描画テキスト全体を取得しコード名を除去
+      let raw = chord.innerText || chord.textContent;
+      if (rtText) {
+        raw = raw.endsWith(rtText)
+          ? raw.slice(0, -rtText.length)
+          : raw.replace(rtText, "");
+      }
+      const lyricText = raw.replace(/[ \t\n\r]+/g, " ").trim();
 
-      chords.push(rt ? rt.textContent.trim() : "");
+      chords.push(rtText);
       lyrics.push(lyricText);
     });
 
