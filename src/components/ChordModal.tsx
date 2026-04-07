@@ -1,4 +1,5 @@
 // src/components/ChordModal.tsx
+// ⚠️ このファイルを丸ごと以下の内容に置き換えること
 
 import { useState } from "react";
 import type { ChordDetail, BassPosition, NoteRole } from "../types";
@@ -60,7 +61,7 @@ function PositionDiagram({
   const allFrets = positions.map(p => p.fret);
   const minFret = Math.max(0, Math.min(...allFrets) - 1);
   const maxFret = Math.max(...allFrets);
-  const displayCount = Math.min(Math.max(maxFret - minFret + 3, 4), 6);
+  const displayCount = Math.max(maxFret - minFret + 3, 4);
 
   const PAD_LEFT = 24;
   const PAD_TOP  = 8;
@@ -88,9 +89,7 @@ function PositionDiagram({
       color: "#E5B800",
     });
   }
-  const highestRoot = roots.length > 0
-    ? roots.reduce((a, b) => (a.string < b.string ? a : b), roots[0])
-    : null;
+  const highestRoot = roots.reduce((a, b) => (a.string < b.string ? a : b), roots[0]);
   if (highestRoot && fifths.length > 0) {
     const nearestFifth = fifths.reduce((a, b) =>
       Math.abs(a.string - highestRoot.string) <= Math.abs(b.string - highestRoot.string) ? a : b
