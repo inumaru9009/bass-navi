@@ -112,10 +112,11 @@ function buildAllPositions(root: string, quality: string): BassPosition[] {
   }));
 
   const rootFretOnA = ((rootSemitone - OPEN_STRINGS[3]) % 12 + 12) % 12;
-  const priority = ["ルート", "5th", "♭3rd", "3rd", "♭7th", "maj7th", "4th", "♭5th", "6th", "♭6th", "2nd"];
   const WINDOW = 5;
+  const priority = ["ルート", "5th", "♭3rd", "3rd", "♭7th", "maj7th", "4th", "♭5th", "6th", "♭6th", "2nd"];
   const strings: Array<1|2|3|4> = [4, 3, 2, 1];
   const positions: BassPosition[] = [];
+  let rootUsedCount = 0;
 
   for (const str of strings) {
     const open = OPEN_STRINGS[str];
@@ -134,7 +135,11 @@ function buildAllPositions(root: string, quality: string): BassPosition[] {
     const inWindow = candidates.filter(c => Math.abs(c.fret - rootFretOnA) <= WINDOW);
     const pool = inWindow.length > 0 ? inWindow : candidates;
 
-    pool.sort((a, b) => {
+    // ルートが2弦以上で使われていたらD弦・G弦はルート以外を優先
+    const nonRoot = pool.filter(c => c.intervalName !== "ルート");
+    const adjustedPool = (rootUsedCount >= 2 && nonRoot.length > 0) ? nonRoot : pool;
+
+    adjustedPool.sort((a, b) => {
       const pa = priority.indexOf(a.intervalName);
       const pb = priority.indexOf(b.intervalName);
       const pd = (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb);
@@ -142,7 +147,9 @@ function buildAllPositions(root: string, quality: string): BassPosition[] {
       return Math.abs(a.fret - rootFretOnA) - Math.abs(b.fret - rootFretOnA);
     });
 
-    positions.push({ string: str, fret: pool[0].fret, intervalName: pool[0].intervalName });
+    const chosen = adjustedPool[0];
+    if (chosen.intervalName === "ルート") rootUsedCount++;
+    positions.push({ string: str, fret: chosen.fret, intervalName: chosen.intervalName });
   }
 
   return positions;
