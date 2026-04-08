@@ -20,17 +20,16 @@ async function extractScore() {
 
     row.querySelectorAll(".chord").forEach(chord => {
       const rt = chord.querySelector("rt");
-      const rtText = rt ? rt.innerText.trim() : "";
-      // innerText でブラウザ描画テキスト全体を取得しコード名を除去
-      let raw = chord.innerText || chord.textContent;
-      if (rtText) {
-        raw = raw.endsWith(rtText)
-          ? raw.slice(0, -rtText.length)
-          : raw.replace(rtText, "");
-      }
-      const lyricText = raw.replace(/[ \t\n\r]+/g, " ").trim();
+      // col単位でinnerTextを使用（CSS pseudo-elementの文字も捕捉）
+      const cols = chord.querySelectorAll(".mejiowvnz .col");
+      const lyricText = Array.from(cols)
+        .map(col => {
+          const t = (col.innerText || col.textContent);
+          return t === "" ? " " : t;
+        })
+        .join("").replace(/[ \t\n\r]+/g, " ").trim();
 
-      chords.push(rtText);
+      chords.push(rt ? rt.textContent.trim() : "");
       lyrics.push(lyricText);
     });
 
