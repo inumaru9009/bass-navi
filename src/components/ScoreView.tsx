@@ -5,6 +5,7 @@ import type { Song, ChordToken } from "../types";
 import { getChordDetail } from "../lib/chordParser";
 import { getDegreeMap, getDegreeLabel } from "../lib/degreeAnalyzer";
 import ChordModal from "./ChordModal";
+import KeyInfoSheet from "./KeyInfoSheet";
 import SectionBlock from "./SectionBlock";
 import Tooltip from "./Tooltip";
 
@@ -16,6 +17,7 @@ type Props = {
 export default function ScoreView({ song, onBack }: Props) {
   const [selectedChord, setSelectedChord] = useState<ChordToken | null>(null);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
+  const [showKeyInfo, setShowKeyInfo] = useState(false);
   const scoreRef = useRef<HTMLDivElement>(null);
 
   const degreeMap = useMemo(
@@ -43,19 +45,12 @@ export default function ScoreView({ song, onBack }: Props) {
           </span>
           <div className="flex items-center gap-2">
             {song.key ? (
-              <Tooltip
-                position="bottom"
-                content={
-                  <>
-                    <p className="font-bold text-yellow-400 mb-1">Key（キー）とは？</p>
-                    <p>曲の「中心の音」。このKeyを基準にコードの役割（トニック・ドミナントなど）が決まる。ベースはKeyの音を意識すると安定感が増す。</p>
-                  </>
-                }
+              <button
+                onClick={() => setShowKeyInfo(true)}
+                className="text-yellow-400 text-sm underline decoration-dotted"
               >
-                <span className="text-yellow-400 text-sm underline decoration-dotted cursor-default">
-                  Key: {song.key}
-                </span>
-              </Tooltip>
+                Key: {song.key}
+              </button>
             ) : null}
             <button
               onClick={handleSaveImage}
@@ -80,11 +75,6 @@ export default function ScoreView({ song, onBack }: Props) {
             </span>
           )}
         </div>
-        {currentSection?.playGuide && (
-          <p className="text-green-400 text-xs mt-1">
-            🎸 {currentSection.playGuide}
-          </p>
-        )}
         <div className="flex gap-3 mt-1">
           <Tooltip position="bottom" content={<><p className="font-bold text-yellow-400 mb-1">トニック</p><p>曲の「ホーム」。安定・落ち着きを感じさせるコード。ルート音をしっかり弾いてOK。</p></>}>
             <span className="flex items-center gap-1 text-xs text-gray-400 cursor-default">
@@ -111,6 +101,15 @@ export default function ScoreView({ song, onBack }: Props) {
 
       {/* 本文（上部バー分のパディング） */}
       <div id="score-full" className="pt-24 pb-24 px-4 overflow-y-auto">
+        {/* 曲解説 */}
+        {song.songAnalysis && (
+          <div className="bg-gray-800 rounded-lg p-4 mb-4">
+            <p className="text-xs text-gray-400 mb-1">📖 曲の分析</p>
+            <p className="text-sm text-gray-200 leading-relaxed">
+              {song.songAnalysis}
+            </p>
+          </div>
+        )}
         {song.sections.map((section, idx) => (
           <SectionBlock
             key={section.id}
@@ -129,6 +128,14 @@ export default function ScoreView({ song, onBack }: Props) {
           detail={getChordDetail(selectedChord)}
           degree={getDegreeLabel(selectedChord.name, degreeMap)}
           onClose={() => setSelectedChord(null)}
+        />
+      )}
+
+      {/* KeyInfoSheet */}
+      {showKeyInfo && song.key && !selectedChord && (
+        <KeyInfoSheet
+          songKey={song.key}
+          onClose={() => setShowKeyInfo(false)}
         />
       )}
     </div>

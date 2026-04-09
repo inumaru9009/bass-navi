@@ -42,7 +42,6 @@ export type Section = {
   type: SectionType;
   label: string;
   lines: Line[];
-  playGuide: string;
   warnings: Warning[];
 };
 
@@ -51,6 +50,7 @@ export type Song = {
   artist?: string;
   key?: string;
   capo?: number;
+  songAnalysis?: string;
   sections: Section[];
   rawText: string;
 };
@@ -82,7 +82,6 @@ export type ChordDetail = {
 export type GeminiSection = {
   type: SectionType;
   label: string;
-  playGuide: string;
   warnings: Warning[];
   startLine: number;
   endLine: number;
@@ -93,5 +92,6 @@ export type GeminiAnalysisResult = {
   artist?: string;
   key: string;
   capo?: number;
+  songAnalysis?: string;
   sections: GeminiSection[];
 };

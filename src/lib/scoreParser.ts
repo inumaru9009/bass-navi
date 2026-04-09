@@ -62,7 +62,6 @@ export function buildSong(
       type: gs.type,
       label: gs.label,
       lines,
-      playGuide: gs.playGuide,
       warnings: gs.warnings ?? [],
     };
   });
@@ -72,6 +71,7 @@ export function buildSong(
     artist: geminiResult.artist,
     key: geminiResult.key,
     capo: geminiResult.capo,
+    songAnalysis: geminiResult.songAnalysis,
     sections,
     rawText,
   };

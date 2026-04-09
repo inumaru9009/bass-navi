@@ -31,11 +31,11 @@ ${summarized}
   "artist": "アーティスト名（不明な場合は省略）",
   "key": "キー（例: G, Am, Bb）",
   "capo": 0,
+  "songAnalysis": "ここに100〜150字の曲解説",
   "sections": [
     {
       "type": "intro | verse | b_melo | chorus | bridge | interlude | outro | unknown",
       "label": "表示用ラベル（例: イントロ, Aメロ, サビ）",
-      "playGuide": "ベーシスト向け一言方針（例: タイトにルートを刻む）",
       "warnings": [
         {
           "type": "modulation | non_diatonic | slash | break | ending | section_change",
@@ -47,6 +47,12 @@ ${summarized}
     }
   ]
 }
+
+songAnalysisには以下の観点を含めてください：
+- 使われているスケール
+- メインのコード進行パターン名（王道進行・小室進行など）
+- ノンダイアトニックコードがあれば言及
+- ベース初心者向けの一言
 
 ## セクション判定のルール
 - 譜面テキスト中に「イントロ」「Aメロ」「Bメロ」「サビ」「アウトロ」「間奏」「ブリッジ」などのラベルが明記されている場合は必ずそれに従う
@@ -60,7 +66,6 @@ ${summarized}
 - startLine/endLineは上記の行番号（0始まりの数値）を使う
 - 全行をいずれかのセクションに必ず含める（行の抜けを作らない）
 - warningsは危険ポイントがない場合は空配列
-- playGuideは長文NG、15文字以内の短文
 - JSONのみ返すこと。絶対に前置きや説明を含めないこと
 `;
 }
