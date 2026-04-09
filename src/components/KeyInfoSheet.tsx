@@ -108,17 +108,25 @@ export default function KeyInfoSheet({ songKey, onClose }: Props) {
             )}
           </div>
 
-          {/* スケール一覧 */}
+          {/* ベースのポイント */}
           <div className="px-4 pt-4 pb-3 border-b border-gray-800">
+            <p className="text-[10px] text-gray-500 tracking-widest mb-2">ベースのポイント</p>
+            <div className="bg-gray-800 rounded-lg p-3">
+              <p className="text-sm text-green-400">🎸 {info.bassPoint}</p>
+            </div>
+          </div>
+
+          {/* スケール一覧 */}
+          <div className="px-4 pt-4 pb-6">
             <button
               onClick={() => setShowScales(!showScales)}
-              className="flex items-center justify-between w-full text-[10px] text-gray-500 tracking-widest mb-2"
+              className="flex items-center justify-between w-full bg-gray-800 rounded-lg px-4 py-3 text-sm text-white"
             >
               <span>スケール一覧</span>
-              <span>{showScales ? "∨" : "›"}</span>
+              <span className="text-gray-400">{showScales ? "∨" : "›"}</span>
             </button>
             {showScales && (
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 mt-2">
                 {info.scales.map((s) => (
                   <div key={s.name} className="bg-gray-800 rounded-lg p-3">
                     <p className="text-sm font-bold text-white mb-1">{s.name}</p>
@@ -137,14 +145,6 @@ export default function KeyInfoSheet({ songKey, onClose }: Props) {
                 ))}
               </div>
             )}
-          </div>
-
-          {/* ベースのポイント */}
-          <div className="px-4 pt-4 pb-6">
-            <p className="text-[10px] text-gray-500 tracking-widest mb-2">ベースのポイント</p>
-            <div className="bg-gray-800 rounded-lg p-3">
-              <p className="text-sm text-green-400">🎸 {info.bassPoint}</p>
-            </div>
           </div>
 
         </div>
