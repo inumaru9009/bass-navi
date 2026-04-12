@@ -50,6 +50,7 @@ export type Song = {
   artist?: string;
   key?: string;
   capo?: number;
+  capoOffset?: number;  // 0=原曲, -1=半音下げ, -2=1音下げ, +1=半音上げ
   songAnalysis?: string;
   sections: Section[];
   rawText: string;
@@ -85,6 +86,17 @@ export type GeminiSection = {
   warnings: Warning[];
   startLine: number;
   endLine: number;
+};
+
+export type PlayType = "passing" | "approach" | "octave";
+
+export type BassPlay = {
+  type: PlayType;
+  label: string;
+  chordName: string;
+  nextChordName?: string;
+  noteExamples: string[];
+  advice: string;
 };
 
 export type GeminiAnalysisResult = {

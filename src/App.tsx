@@ -34,6 +34,7 @@ export default function App() {
 
   const [rawText, setRawText] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [urlCapo, setUrlCapo] = useState<number | null>(null);
 
   // song更新時にlocalStorageに保存
   useEffect(() => {
@@ -48,12 +49,18 @@ export default function App() {
     }
   }, [song]);
 
-  // URLパラメータから譜面テキストを受け取る
+  // URLパラメータから譜面テキスト・カポ値を受け取る
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const score = params.get("score");
+    const capo = params.get("capo");
     if (score) {
       setRawText(decodeURIComponent(score));
+    }
+    if (capo !== null) {
+      setUrlCapo(parseInt(capo, 10) || 0);
+    }
+    if (score || capo) {
       window.history.replaceState({}, "", "/");
     }
   }, []);
@@ -64,12 +71,19 @@ export default function App() {
     setState("input");
   }
 
+  function handleCapoOffsetChange(offset: number) {
+    setSong(prev => prev ? { ...prev, capoOffset: offset } : null);
+  }
+
   async function handleAnalyze() {
     if (!rawText.trim()) return;
     setState("loading");
     try {
       const result = await analyzeWithGemini(rawText);
       const built = buildSong(rawText, result);
+      if (urlCapo !== null) {
+        built.capo = urlCapo;
+      }
       setSong(built);
       setState("result");
     } catch (e) {
@@ -79,7 +93,7 @@ export default function App() {
   }
 
   if (state === "result" && song) {
-    return <ScoreView song={song} onBack={handleBack} />;
+    return <ScoreView song={song} onBack={handleBack} onCapoOffsetChange={handleCapoOffsetChange} />;
   }
 
   if (state === "guide") {

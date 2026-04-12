@@ -1,8 +1,10 @@
 // src/components/SectionBlock.tsx
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, Fragment } from "react";
 import type { Section, ChordToken } from "../types";
 import { getDegreeLabel, getDegreeFunction } from "../lib/degreeAnalyzer";
+import { getLinePlays } from "../lib/bassPlayUtils";
+import BassPlayHint from "./BassPlayHints";
 import Tooltip from "./Tooltip";
 
 const degreeFunctionColors: Record<string, string> = {
@@ -19,6 +21,7 @@ type Props = {
   onChordTap: (chord: ChordToken) => void;
   onVisible: () => void;
   degreeMap: Record<string, string>;
+  showHints?: boolean;
 };
 
 function getDegreeTooltip(degree: string, degreeFunc: string): React.ReactNode {
@@ -43,6 +46,7 @@ export default function SectionBlock({
   onChordTap,
   onVisible,
   degreeMap,
+  showHints = false,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -94,29 +98,38 @@ export default function SectionBlock({
         <div key={idx} className="mb-2">
           {/* コード行 */}
           {line.chords.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-0.5">
-              {line.chords.map((chord, ci) => {
-                const degree = getDegreeLabel(chord.name, degreeMap);
-                const degreeFunc = getDegreeFunction(degree);
-                const colorClass = degreeFunctionColors[degreeFunc];
-                return (
-                  <div key={ci} className="flex flex-col items-center">
-                    <button
-                      onClick={() => onChordTap(chord)}
-                      className={`text-sm font-mono font-bold px-2 py-0.5 rounded transition-colors ${colorClass}`}
-                    >
-                      {chord.name}
-                    </button>
-                    {degree && (
-                      <Tooltip content={getDegreeTooltip(degree, degreeFunc)}>
-                        <span className="text-gray-500 text-xs mt-0.5 cursor-default">
-                          {degree}
-                        </span>
-                      </Tooltip>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="flex flex-wrap gap-2 mb-0.5 items-end">
+              {(() => {
+                const playsMap = showHints
+                  ? new Map(getLinePlays(line.chords).map(({ afterIndex, play }) => [afterIndex, play]))
+                  : new Map();
+                return line.chords.map((chord, ci) => {
+                  const degree = getDegreeLabel(chord.name, degreeMap);
+                  const degreeFunc = getDegreeFunction(degree);
+                  const colorClass = degreeFunctionColors[degreeFunc];
+                  const hint = playsMap.get(ci);
+                  return (
+                    <Fragment key={ci}>
+                      <div className="flex flex-col items-center">
+                        <button
+                          onClick={() => onChordTap(chord)}
+                          className={`text-sm font-mono font-bold px-2 py-0.5 rounded transition-colors ${colorClass}`}
+                        >
+                          {chord.name}
+                        </button>
+                        {degree && (
+                          <Tooltip content={getDegreeTooltip(degree, degreeFunc)}>
+                            <span className="text-gray-500 text-xs mt-0.5 cursor-default">
+                              {degree}
+                            </span>
+                          </Tooltip>
+                        )}
+                      </div>
+                      {hint && <BassPlayHint play={hint} />}
+                    </Fragment>
+                  );
+                });
+              })()}
             </div>
           )}
           {/* 歌詞行 */}

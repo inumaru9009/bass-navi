@@ -4,20 +4,40 @@ import { useState, useMemo } from "react";
 import type { Song, ChordToken } from "../types";
 import { getChordDetail } from "../lib/chordParser";
 import { getDegreeMap, getDegreeLabel } from "../lib/degreeAnalyzer";
+import { calcSoundingKey } from "../lib/bassPlayUtils";
 import ChordModal from "./ChordModal";
 import KeyInfoSheet from "./KeyInfoSheet";
 import SectionBlock from "./SectionBlock";
 import Tooltip from "./Tooltip";
 
+const TUNING_OPTIONS = [
+  { value:  2, label: "+1音上げ" },
+  { value:  1, label: "+半音上げ" },
+  { value:  0, label: "原曲" },
+  { value: -1, label: "半音下げ" },
+  { value: -2, label: "1音下げ" },
+  { value: -3, label: "1.5音下げ" },
+];
+
 type Props = {
   song: Song;
   onBack: () => void;
+  onCapoOffsetChange?: (offset: number) => void;
 };
 
-export default function ScoreView({ song, onBack }: Props) {
+export default function ScoreView({ song, onBack, onCapoOffsetChange }: Props) {
   const [selectedChord, setSelectedChord] = useState<ChordToken | null>(null);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
   const [showKeyInfo, setShowKeyInfo] = useState(false);
+  const [capoOffset, setCapoOffset] = useState(song.capoOffset ?? 0);
+  const [showHints, setShowHints] = useState(false);
+
+  function handleCapoOffsetChange(offset: number) {
+    setCapoOffset(offset);
+    onCapoOffsetChange?.(offset);
+  }
+
+  const soundingKey = calcSoundingKey(song.key, song.capo, capoOffset);
   const degreeMap = useMemo(
     () => getDegreeMap(song.key ?? ""),
     [song.key]
@@ -85,10 +105,45 @@ export default function ScoreView({ song, onBack }: Props) {
             </span>
           </Tooltip>
         </div>
+
+        {/* カポ・チューニングバー */}
+        <div className="flex items-center gap-2 mt-1 pt-1 border-t border-gray-800 flex-wrap text-xs">
+          <span className="text-gray-500">
+            カポ: <span className="text-gray-300 font-mono">{song.capo ? `${song.capo}` : "なし"}</span>
+          </span>
+          <span className="text-gray-700">|</span>
+          <span className="text-gray-500">
+            表記: <span className="text-yellow-400 font-mono">{song.key ?? "?"}</span>
+          </span>
+          <span className="text-gray-700">|</span>
+          <span className="text-gray-500">
+            実音: <span className="text-green-400 font-mono">{soundingKey}</span>
+          </span>
+          <span className="text-gray-700">|</span>
+          <select
+            value={capoOffset}
+            onChange={e => handleCapoOffsetChange(Number(e.target.value))}
+            className="bg-gray-800 text-gray-300 text-xs rounded px-1 py-0.5 border border-gray-700"
+          >
+            {TUNING_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={() => setShowHints(h => !h)}
+            className={`text-xs px-1.5 py-0.5 rounded border ${
+              showHints
+                ? "bg-purple-900/60 text-purple-300 border-purple-700/40"
+                : "bg-gray-800 text-gray-500 border-gray-700"
+            }`}
+          >
+            遊びどころ
+          </button>
+        </div>
       </div>
 
       {/* 本文（上部バー分のパディング） */}
-      <div id="score-full" className="pt-24 pb-24 px-4 overflow-y-auto">
+      <div id="score-full" className="pt-36 pb-24 px-4 overflow-y-auto">
         {/* 曲解説 */}
         {song.songAnalysis && (
           <div className="bg-gray-800 rounded-lg p-4 mb-4">
@@ -106,6 +161,7 @@ export default function ScoreView({ song, onBack }: Props) {
             onChordTap={setSelectedChord}
             onVisible={() => setCurrentSectionIdx(idx)}
             degreeMap={degreeMap}
+            showHints={showHints}
           />
         ))}
       </div>
