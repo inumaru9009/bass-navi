@@ -1,6 +1,6 @@
 // src/components/ScoreView.tsx
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useMemo } from "react";
 import type { Song, ChordToken } from "../types";
 import { getChordDetail } from "../lib/chordParser";
 import { getDegreeMap, getDegreeLabel } from "../lib/degreeAnalyzer";
@@ -18,8 +18,6 @@ export default function ScoreView({ song, onBack }: Props) {
   const [selectedChord, setSelectedChord] = useState<ChordToken | null>(null);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
   const [showKeyInfo, setShowKeyInfo] = useState(false);
-  const scoreRef = useRef<HTMLDivElement>(null);
-
   const degreeMap = useMemo(
     () => getDegreeMap(song.key ?? ""),
     [song.key]
@@ -28,12 +26,8 @@ export default function ScoreView({ song, onBack }: Props) {
   const currentSection = song.sections[currentSectionIdx];
   const nextSection = song.sections[currentSectionIdx + 1];
 
-  function handleSaveImage() {
-    window.print();
-  }
-
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col" ref={scoreRef}>
+    <div className="min-h-screen bg-black text-white flex flex-col">
       {/* 上部固定バー */}
       <div className="fixed top-0 left-0 right-0 bg-gray-900 border-b border-gray-700 px-4 py-2 z-10">
         <div className="flex items-center justify-between mb-1">
@@ -52,12 +46,6 @@ export default function ScoreView({ song, onBack }: Props) {
                 Key: {song.key}
               </button>
             ) : null}
-            <button
-              onClick={handleSaveImage}
-              className="text-gray-400 text-xs bg-gray-800 px-2 py-1 rounded"
-            >
-              📷 保存
-            </button>
           </div>
         </div>
         <div className="flex gap-2 text-xs">

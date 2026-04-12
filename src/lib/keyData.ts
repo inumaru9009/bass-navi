@@ -53,11 +53,6 @@ const MAJOR_PROGRESSIONS: ProgressionDef[] = [
     description: "Jポップで最もよく使われる。明るく感動的な流れ。",
   },
   {
-    name: "小室進行",
-    degreeIndices: [5, 3, 4, 0],
-    description: "切なさと疾走感。90年代Jポップの代名詞。",
-  },
-  {
     name: "カノン進行",
     degreeIndices: [0, 4, 5, 2, 3, 0, 3, 4],
     description: "クラシック由来。壮大で美しい流れ。",
@@ -138,11 +133,6 @@ const MINOR_PROGRESSIONS: ProgressionDef[] = [
     },
     degrees: ["IVm", "♭VII", "♭VI", "V"],
     description: "スペイン・フラメンコ由来。情熱的でドラマチック。",
-  },
-  {
-    name: "小室マイナー",
-    degreeIndices: [0, 5, 6, 0],
-    description: "マイナーキーの小室進行。暗い疾走感。",
   },
   {
     name: "Andalusian Cadence",
