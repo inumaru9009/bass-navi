@@ -100,7 +100,7 @@ export default function SectionBlock({
         <div key={idx} className="mb-2">
           {/* コード行 */}
           {line.chords.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-0.5 items-end">
+            <div className="flex flex-wrap gap-2 mb-0.5 items-start">
               {(() => {
                 const displayChords = transposeBy
                   ? line.chords.map(c => transposeToken(c, transposeBy))

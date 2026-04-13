@@ -1,6 +1,6 @@
 // src/components/ScoreView.tsx
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import type { Song, ChordToken } from "../types";
 import { getChordDetail } from "../lib/chordParser";
 import { getDegreeMap, getDegreeLabel } from "../lib/degreeAnalyzer";
@@ -21,6 +21,18 @@ export default function ScoreView({ song, onBack }: Props) {
   const [showKeyInfo, setShowKeyInfo] = useState(false);
   const [showHints, setShowHints] = useState(false);
   const [showSounding, setShowSounding] = useState(true);
+  const [headerHeight, setHeaderHeight] = useState(112);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      setHeaderHeight(el.offsetHeight);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const hasCapo = (song.capo ?? 0) > 0;
   const soundingKey = calcSoundingKey(song.key, song.capo, 0);
@@ -38,7 +50,7 @@ export default function ScoreView({ song, onBack }: Props) {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* 上部固定バー */}
-      <div className="fixed top-0 left-0 right-0 bg-gray-900 border-b border-gray-700 px-4 py-2 z-10">
+      <div ref={headerRef} className="fixed top-0 left-0 right-0 bg-gray-900 border-b border-gray-700 px-4 py-2 z-10">
         <div className="flex items-center justify-between mb-1">
           <button onClick={onBack} className="text-gray-400 text-sm">
             ← 戻る
@@ -123,7 +135,7 @@ export default function ScoreView({ song, onBack }: Props) {
       </div>
 
       {/* 本文（上部バー分のパディング） */}
-      <div id="score-full" className="pt-28 pb-24 px-4 overflow-y-auto">
+      <div id="score-full" className="pb-24 px-4 overflow-y-auto" style={{ paddingTop: headerHeight }}>
         {/* 曲解説 */}
         {song.songAnalysis && (
           <div className="bg-gray-800 rounded-lg p-4 mb-4">
