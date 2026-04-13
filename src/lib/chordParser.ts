@@ -8,6 +8,19 @@ const NOTE_ALIASES: Record<string, string> = {
   "Db": "C#", "Eb": "D#", "Fb": "E", "Gb": "F#", "Ab": "G#", "Bb": "A#", "Cb": "B",
 };
 
+// フラット系・シャープ系の2本のテーブル
+const CHROMATIC_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const CHROMATIC_FLAT  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+
+// フラット系ルートの判定（元の表記がフラットのもの + F は Bb を含むためフラット系）
+const FLAT_ROOT_ORIGINALS = new Set(["Db","Eb","Gb","Ab","Bb","F"]);
+// 正規化後の A#/D#/G# はほぼ常に Bb/Eb/Ab として扱う
+const FLAT_ROOT_NORMALIZED = new Set(["A#","D#","G#"]);
+
+function useFlatNotation(originalRoot: string, normalizedRoot: string): boolean {
+  return FLAT_ROOT_ORIGINALS.has(originalRoot) || FLAT_ROOT_NORMALIZED.has(normalizedRoot);
+}
+
 function normalizeNote(note: string): string {
   return NOTE_ALIASES[note] ?? note;
 }
@@ -66,11 +79,6 @@ const OPEN_STRINGS: Record<1|2|3|4, number> = {
   1: 7,  // G弦
 };
 
-function noteToFret(stringNum: 1|2|3|4, noteSemitone: number): number {
-  const open = OPEN_STRINGS[stringNum];
-  return ((noteSemitone - open) % 12 + 12) % 12;
-}
-
 const QUALITY_INTERVALS: Record<string, { semitone: number; intervalName: string }[]> = {
   "":     [{ semitone: 0, intervalName: "ルート" }, { semitone: 4, intervalName: "3rd"   }, { semitone: 7,  intervalName: "5th"   }],
   "m":    [{ semitone: 0, intervalName: "ルート" }, { semitone: 3, intervalName: "♭3rd"  }, { semitone: 7,  intervalName: "5th"   }],
@@ -119,12 +127,9 @@ function buildAllPositions(root: string, quality: string): BassPosition[] {
 
   for (const str of strings) {
     const open = OPEN_STRINGS[str];
-    // 各弦でのルートフレット（0〜11f）をウィンドウ基準にする
     const rootFretOnStr = ((rootSemitone - open) % 12 + 12) % 12;
 
-    // octave=0 の候補（低フレット優先）
     const candsLow: { semitone: number; intervalName: string; fret: number }[] = [];
-    // octave=12 のフォールバック候補
     const candsHigh: { semitone: number; intervalName: string; fret: number }[] = [];
     for (const tone of toneSet) {
       const baseFret = ((tone.semitone - open) % 12 + 12) % 12;
@@ -133,13 +138,11 @@ function buildAllPositions(root: string, quality: string): BassPosition[] {
     }
 
     type Cand = { semitone: number; intervalName: string; fret: number };
-    // ルート使用済み2弦以上ならルート以外を優先
     const filterRoot = (arr: Cand[]): Cand[] =>
       rootUsedCount >= 2 ? arr.filter(c => c.intervalName !== "ルート") : arr;
     const filterWindow = (arr: Cand[]): Cand[] =>
       arr.filter(c => Math.abs(c.fret - rootFretOnStr) <= WINDOW);
 
-    // 優先順位: octave=0 ウィンドウ内 → octave=12 ウィンドウ内 → octave=0 全体 → 全候補
     let pool = filterWindow(filterRoot(candsLow));
     if (pool.length === 0) pool = filterWindow(filterRoot(candsHigh));
     if (pool.length === 0) pool = filterRoot(candsLow);
@@ -195,22 +198,30 @@ const INTERVAL_ROLES: Record<number, { name: string; role: string }> = {
   14: { name: "9th",    role: "広がりを加える音" },
 };
 
-function getSafeNotes(root: string, quality: string): string[] {
+function getSafeNotes(root: string, quality: string, noteArr: string[]): string[] {
   const rootIdx = NOTES.indexOf(root);
   if (rootIdx === -1) return [root];
   const intervals = CHORD_TONES[quality] ?? CHORD_TONES[""] ?? [0, 4, 7];
-  return intervals.map(i => NOTES[(rootIdx + i) % 12]);
+  return intervals.map(i => noteArr[(rootIdx + i) % 12]);
 }
 
 export function getChordDetail(token: ChordToken): ChordDetail {
-  const root = token.bass ?? token.root;
-  const safeNotes = getSafeNotes(token.root, token.quality);
+  // root が正規化されていない場合（例: "Bb" のまま）に対応
+  const normalizedTokenRoot = NOTE_ALIASES[token.root] ?? token.root;
+  const normalizedBass = token.bass ? (NOTE_ALIASES[token.bass] ?? token.bass) : undefined;
+  const root = normalizedBass ?? normalizedTokenRoot;
+
+  // 元の表記のルートを取り出してフラット系か判定
+  const originalRoot = token.name.match(/^([A-G][b#]?)/)?.[1] ?? token.root;
+  const noteArr = useFlatNotation(originalRoot, normalizedTokenRoot) ? CHROMATIC_FLAT : CHROMATIC_SHARP;
+
+  const safeNotes = getSafeNotes(normalizedTokenRoot, token.quality, noteArr);
   const positions = buildAllPositions(root, token.quality);
 
-  const rootIdx = NOTES.indexOf(token.root);
+  const rootIdx = NOTES.indexOf(normalizedTokenRoot);
   const intervals = CHORD_TONES[token.quality] ?? CHORD_TONES[""] ?? [0, 4, 7];
   const noteRoles: NoteRole[] = rootIdx === -1 ? [] : intervals.map(i => ({
-    note: NOTES[(rootIdx + i) % 12],
+    note: noteArr[(rootIdx + i) % 12],
     intervalName: INTERVAL_ROLES[i]?.name ?? `${i}th`,
     role: INTERVAL_ROLES[i]?.role ?? "",
   }));
