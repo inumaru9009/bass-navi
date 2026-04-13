@@ -71,10 +71,6 @@ export default function App() {
     setState("input");
   }
 
-  function handleCapoOffsetChange(offset: number) {
-    setSong(prev => prev ? { ...prev, capoOffset: offset } : null);
-  }
-
   async function handleAnalyze() {
     if (!rawText.trim()) return;
     setState("loading");
@@ -93,7 +89,7 @@ export default function App() {
   }
 
   if (state === "result" && song) {
-    return <ScoreView song={song} onBack={handleBack} onCapoOffsetChange={handleCapoOffsetChange} />;
+    return <ScoreView song={song} onBack={handleBack} />;
   }
 
   if (state === "guide") {

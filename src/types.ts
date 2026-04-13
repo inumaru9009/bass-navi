@@ -50,7 +50,6 @@ export type Song = {
   artist?: string;
   key?: string;
   capo?: number;
-  capoOffset?: number;  // 0=原曲, -1=半音下げ, -2=1音下げ, +1=半音上げ
   songAnalysis?: string;
   sections: Section[];
   rawText: string;

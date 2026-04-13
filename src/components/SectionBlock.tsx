@@ -3,7 +3,7 @@
 import { useEffect, useRef, Fragment } from "react";
 import type { Section, ChordToken } from "../types";
 import { getDegreeLabel, getDegreeFunction } from "../lib/degreeAnalyzer";
-import { getLinePlays } from "../lib/bassPlayUtils";
+import { getLinePlays, transposeToken } from "../lib/bassPlayUtils";
 import BassPlayHint from "./BassPlayHints";
 import Tooltip from "./Tooltip";
 
@@ -22,6 +22,7 @@ type Props = {
   onVisible: () => void;
   degreeMap: Record<string, string>;
   showHints?: boolean;
+  transposeBy?: number;
 };
 
 function getDegreeTooltip(degree: string, degreeFunc: string): React.ReactNode {
@@ -47,6 +48,7 @@ export default function SectionBlock({
   onVisible,
   degreeMap,
   showHints = false,
+  transposeBy = 0,
 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -100,10 +102,13 @@ export default function SectionBlock({
           {line.chords.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-0.5 items-end">
               {(() => {
+                const displayChords = transposeBy
+                  ? line.chords.map(c => transposeToken(c, transposeBy))
+                  : line.chords;
                 const playsMap = showHints
-                  ? new Map(getLinePlays(line.chords).map(({ afterIndex, play }) => [afterIndex, play]))
+                  ? new Map(getLinePlays(displayChords).map(({ afterIndex, play }) => [afterIndex, play]))
                   : new Map();
-                return line.chords.map((chord, ci) => {
+                return displayChords.map((chord, ci) => {
                   const degree = getDegreeLabel(chord.name, degreeMap);
                   const degreeFunc = getDegreeFunction(degree);
                   const colorClass = degreeFunctionColors[degreeFunc];

@@ -140,3 +140,21 @@ export function getLinePlays(
 
   return result;
 }
+
+// ── コード転調ユーティリティ ──────────────────────────────
+
+function transposeNote(note: string, semitones: number): string {
+  if (semitones === 0) return note;
+  const normalized = NOTE_ALIASES[note] ?? note;
+  const idx = NOTES.indexOf(normalized);
+  if (idx < 0) return note;
+  return noteAt(idx + semitones);
+}
+
+export function transposeToken(token: ChordToken, semitones: number): ChordToken {
+  if (semitones === 0) return token;
+  const newRoot = transposeNote(token.root, semitones);
+  const newBass = token.bass ? transposeNote(token.bass, semitones) : undefined;
+  const newName = newRoot + token.quality + (newBass ? "/" + newBass : "");
+  return { ...token, name: newName, root: newRoot, bass: newBass };
+}

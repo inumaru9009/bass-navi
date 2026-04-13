@@ -10,37 +10,26 @@ import KeyInfoSheet from "./KeyInfoSheet";
 import SectionBlock from "./SectionBlock";
 import Tooltip from "./Tooltip";
 
-const TUNING_OPTIONS = [
-  { value:  2, label: "+1音上げ" },
-  { value:  1, label: "+半音上げ" },
-  { value:  0, label: "原曲" },
-  { value: -1, label: "半音下げ" },
-  { value: -2, label: "1音下げ" },
-  { value: -3, label: "1.5音下げ" },
-];
-
 type Props = {
   song: Song;
   onBack: () => void;
-  onCapoOffsetChange?: (offset: number) => void;
 };
 
-export default function ScoreView({ song, onBack, onCapoOffsetChange }: Props) {
+export default function ScoreView({ song, onBack }: Props) {
   const [selectedChord, setSelectedChord] = useState<ChordToken | null>(null);
   const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
   const [showKeyInfo, setShowKeyInfo] = useState(false);
-  const [capoOffset, setCapoOffset] = useState(song.capoOffset ?? 0);
   const [showHints, setShowHints] = useState(false);
+  const [showSounding, setShowSounding] = useState(true);
 
-  function handleCapoOffsetChange(offset: number) {
-    setCapoOffset(offset);
-    onCapoOffsetChange?.(offset);
-  }
+  const hasCapo = (song.capo ?? 0) > 0;
+  const soundingKey = calcSoundingKey(song.key, song.capo, 0);
+  const displayKey = (showSounding && hasCapo) ? soundingKey : (song.key ?? "");
+  const transposeBy = (showSounding && hasCapo) ? (song.capo ?? 0) : 0;
 
-  const soundingKey = calcSoundingKey(song.key, song.capo, capoOffset);
   const degreeMap = useMemo(
-    () => getDegreeMap(song.key ?? ""),
-    [song.key]
+    () => getDegreeMap(displayKey),
+    [displayKey]
   );
 
   const currentSection = song.sections[currentSectionIdx];
@@ -63,9 +52,25 @@ export default function ScoreView({ song, onBack, onCapoOffsetChange }: Props) {
                 onClick={() => setShowKeyInfo(true)}
                 className="text-yellow-400 text-sm underline decoration-dotted"
               >
-                Key: {song.key}
+                Key: {displayKey}
               </button>
             ) : null}
+            {hasCapo && (
+              <div className="flex text-xs rounded overflow-hidden border border-gray-700">
+                <button
+                  onClick={() => setShowSounding(true)}
+                  className={`px-2 py-0.5 ${showSounding ? "bg-yellow-500 text-black font-bold" : "bg-gray-800 text-gray-500"}`}
+                >
+                  実音
+                </button>
+                <button
+                  onClick={() => setShowSounding(false)}
+                  className={`px-2 py-0.5 ${!showSounding ? "bg-gray-600 text-white font-bold" : "bg-gray-800 text-gray-500"}`}
+                >
+                  カポ{song.capo}
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex gap-2 text-xs">
@@ -83,7 +88,7 @@ export default function ScoreView({ song, onBack, onCapoOffsetChange }: Props) {
             </span>
           )}
         </div>
-        <div className="flex gap-3 mt-1">
+        <div className="flex items-center gap-3 mt-1">
           <Tooltip position="bottom" content={<><p className="font-bold text-yellow-400 mb-1">トニック</p><p>曲の「ホーム」。安定・落ち着きを感じさせるコード。ルート音をしっかり弾いてOK。</p></>}>
             <span className="flex items-center gap-1 text-xs text-gray-400 cursor-default">
               <span className="w-3 h-3 rounded-sm bg-yellow-600 inline-block" />トニック
@@ -104,34 +109,9 @@ export default function ScoreView({ song, onBack, onCapoOffsetChange }: Props) {
               <span className="w-3 h-3 rounded-sm bg-gray-700 inline-block" />その他
             </span>
           </Tooltip>
-        </div>
-
-        {/* カポ・チューニングバー */}
-        <div className="flex items-center gap-2 mt-1 pt-1 border-t border-gray-800 flex-wrap text-xs">
-          <span className="text-gray-500">
-            カポ: <span className="text-gray-300 font-mono">{song.capo ? `${song.capo}` : "なし"}</span>
-          </span>
-          <span className="text-gray-700">|</span>
-          <span className="text-gray-500">
-            表記: <span className="text-yellow-400 font-mono">{song.key ?? "?"}</span>
-          </span>
-          <span className="text-gray-700">|</span>
-          <span className="text-gray-500">
-            実音: <span className="text-green-400 font-mono">{soundingKey}</span>
-          </span>
-          <span className="text-gray-700">|</span>
-          <select
-            value={capoOffset}
-            onChange={e => handleCapoOffsetChange(Number(e.target.value))}
-            className="bg-gray-800 text-gray-300 text-xs rounded px-1 py-0.5 border border-gray-700"
-          >
-            {TUNING_OPTIONS.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
           <button
             onClick={() => setShowHints(h => !h)}
-            className={`text-xs px-1.5 py-0.5 rounded border ${
+            className={`ml-auto text-xs px-1.5 py-0.5 rounded border ${
               showHints
                 ? "bg-purple-900/60 text-purple-300 border-purple-700/40"
                 : "bg-gray-800 text-gray-500 border-gray-700"
@@ -143,7 +123,7 @@ export default function ScoreView({ song, onBack, onCapoOffsetChange }: Props) {
       </div>
 
       {/* 本文（上部バー分のパディング） */}
-      <div id="score-full" className="pt-36 pb-24 px-4 overflow-y-auto">
+      <div id="score-full" className="pt-28 pb-24 px-4 overflow-y-auto">
         {/* 曲解説 */}
         {song.songAnalysis && (
           <div className="bg-gray-800 rounded-lg p-4 mb-4">
@@ -162,6 +142,7 @@ export default function ScoreView({ song, onBack, onCapoOffsetChange }: Props) {
             onVisible={() => setCurrentSectionIdx(idx)}
             degreeMap={degreeMap}
             showHints={showHints}
+            transposeBy={transposeBy}
           />
         ))}
       </div>
@@ -176,9 +157,9 @@ export default function ScoreView({ song, onBack, onCapoOffsetChange }: Props) {
       )}
 
       {/* KeyInfoSheet */}
-      {showKeyInfo && song.key && !selectedChord && (
+      {showKeyInfo && displayKey && !selectedChord && (
         <KeyInfoSheet
-          songKey={song.key}
+          songKey={displayKey}
           onClose={() => setShowKeyInfo(false)}
         />
       )}
