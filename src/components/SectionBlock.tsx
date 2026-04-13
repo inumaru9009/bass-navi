@@ -1,6 +1,6 @@
 // src/components/SectionBlock.tsx
 
-import { useEffect, useRef, Fragment } from "react";
+import { Fragment } from "react";
 import type { Section, ChordToken } from "../types";
 import { getDegreeLabel, getDegreeFunction } from "../lib/degreeAnalyzer";
 import { getLinePlays, transposeToken } from "../lib/bassPlayUtils";
@@ -17,9 +17,7 @@ const degreeFunctionColors: Record<string, string> = {
 
 type Props = {
   section: Section;
-  isActive: boolean;
   onChordTap: (chord: ChordToken) => void;
-  onVisible: () => void;
   degreeMap: Record<string, string>;
   showHints?: boolean;
   transposeBy?: number;
@@ -43,46 +41,16 @@ function getDegreeTooltip(degree: string, degreeFunc: string): React.ReactNode {
 
 export default function SectionBlock({
   section,
-  isActive,
   onChordTap,
-  onVisible,
   degreeMap,
   showHints = false,
   transposeBy = 0,
 }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting) onVisible();
-      },
-      { threshold: 0.3 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [onVisible]);
-
   return (
-    <div
-      ref={ref}
-      className={`mb-6 rounded-lg p-3 border ${
-        isActive
-          ? "border-yellow-500 bg-gray-900"
-          : "border-gray-800 bg-gray-950"
-      }`}
-    >
+    <div className="mb-6 rounded-lg p-3 border border-gray-800 bg-gray-950">
       {/* セクションラベル */}
       <div className="flex items-center gap-2 mb-2">
-        <span
-          className={`text-xs font-bold px-2 py-0.5 rounded ${
-            isActive
-              ? "bg-yellow-500 text-black"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
+        <span className="text-xs font-bold px-2 py-0.5 rounded bg-gray-700 text-gray-300">
           {section.label}
         </span>
         {section.warnings.map((w, i) => (

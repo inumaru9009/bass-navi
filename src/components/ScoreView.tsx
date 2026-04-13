@@ -17,7 +17,6 @@ type Props = {
 
 export default function ScoreView({ song, onBack }: Props) {
   const [selectedChord, setSelectedChord] = useState<ChordToken | null>(null);
-  const [currentSectionIdx, setCurrentSectionIdx] = useState(0);
   const [showKeyInfo, setShowKeyInfo] = useState(false);
   const [showHints, setShowHints] = useState(false);
   const [showSounding, setShowSounding] = useState(true);
@@ -28,7 +27,7 @@ export default function ScoreView({ song, onBack }: Props) {
     const el = headerRef.current;
     if (!el) return;
     const observer = new ResizeObserver(() => {
-      setHeaderHeight(el.offsetHeight);
+      setHeaderHeight(el.getBoundingClientRect().height);
     });
     observer.observe(el);
     return () => observer.disconnect();
@@ -43,9 +42,6 @@ export default function ScoreView({ song, onBack }: Props) {
     () => getDegreeMap(displayKey),
     [displayKey]
   );
-
-  const currentSection = song.sections[currentSectionIdx];
-  const nextSection = song.sections[currentSectionIdx + 1];
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -85,22 +81,7 @@ export default function ScoreView({ song, onBack }: Props) {
             )}
           </div>
         </div>
-        <div className="flex gap-2 text-xs">
-          <span className="bg-yellow-500 text-black px-2 py-0.5 rounded font-bold">
-            {currentSection?.label ?? ""}
-          </span>
-          {currentSection?.warnings?.length > 0 && (
-            <span className="bg-red-700 text-white px-2 py-0.5 rounded">
-              ⚠ {currentSection.warnings[0].label}
-            </span>
-          )}
-          {nextSection && (
-            <span className="bg-gray-700 text-gray-300 px-2 py-0.5 rounded">
-              次→ {nextSection.label}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-3 mt-1">
+        <div className="flex items-center gap-3">
           <Tooltip position="bottom" content={<><p className="font-bold text-yellow-400 mb-1">トニック</p><p>曲の「ホーム」。安定・落ち着きを感じさせるコード。ルート音をしっかり弾いてOK。</p></>}>
             <span className="flex items-center gap-1 text-xs text-gray-400 cursor-default">
               <span className="w-3 h-3 rounded-sm bg-yellow-600 inline-block" />トニック
@@ -134,7 +115,7 @@ export default function ScoreView({ song, onBack }: Props) {
         </div>
       </div>
 
-      {/* 本文（上部バー分のパディング） */}
+      {/* 本文 */}
       <div id="score-full" className="pb-24 px-4 overflow-y-auto" style={{ paddingTop: headerHeight }}>
         {/* 曲解説 */}
         {song.songAnalysis && (
@@ -145,13 +126,11 @@ export default function ScoreView({ song, onBack }: Props) {
             </p>
           </div>
         )}
-        {song.sections.map((section, idx) => (
+        {song.sections.map((section) => (
           <SectionBlock
             key={section.id}
             section={section}
-            isActive={idx === currentSectionIdx}
             onChordTap={setSelectedChord}
-            onVisible={() => setCurrentSectionIdx(idx)}
             degreeMap={degreeMap}
             showHints={showHints}
             transposeBy={transposeBy}
